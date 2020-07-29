@@ -8,4 +8,8 @@
     <ProjectReference Include="..\MovieLand.Data\MovieLand.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Dtos\" />
+  </ItemGroup>
+
 </Project>

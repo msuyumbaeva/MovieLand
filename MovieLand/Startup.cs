@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
 
 namespace MovieLand
@@ -41,6 +43,9 @@ namespace MovieLand
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connection);
+
+            // Setup entity services
+            services.AddTransient<IGenreService, GenreService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
