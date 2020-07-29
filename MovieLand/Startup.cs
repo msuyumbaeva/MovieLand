@@ -46,6 +46,7 @@ namespace MovieLand
 
             // Setup entity services
             services.AddTransient<IGenreService, GenreService>();
+            services.AddTransient<ICountryService, CountryService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

@@ -14,6 +14,7 @@ namespace MovieLand.Data.Models
 
         [Required]
         [StringLength(100)]
+        [Display(Name = "Наименование")]
         public string Name { get; set; }
 
         public virtual ICollection<MovieCountry> MovieCountries { get; set; }
