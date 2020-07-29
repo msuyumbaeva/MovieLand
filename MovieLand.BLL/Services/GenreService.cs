@@ -22,6 +22,8 @@ namespace MovieLand.BLL.Services
         // Create genre
         public async Task<OperationDetails<Genre>> CreateAsync(Genre genre) {
             try {
+                genre.Name = genre.Name.ToLower();
+
                 var genresWithSameName = await _context.Genres.Where(g => g.Name == genre.Name).CountAsync();
                 if(genresWithSameName > 0) {
                     throw new Exception($"Жанр с наименованием {genre.Name} уже существует");
@@ -45,13 +47,15 @@ namespace MovieLand.BLL.Services
                     throw new Exception($"Жанр с Id {genre.Id} не найден");
                 }
 
+                genre.Name = genre.Name.ToLower();
+
                 var genresWithSameName = await _context.Genres.Where(g => g.Name == genre.Name && g.Id != genre.Id).CountAsync();
                 if (genresWithSameName > 0) {
                     throw new Exception($"Жанр с наименованием {genre.Name} уже существует");
                 }
 
                 dbGenre.Name = genre.Name;
-                var genreEntry = _context.Genres.Update(genre);
+                var genreEntry = _context.Genres.Update(dbGenre);
                 await _context.SaveChangesAsync();
 
                 return OperationDetails<Genre>.Success(genreEntry.Entity);
@@ -74,7 +78,7 @@ namespace MovieLand.BLL.Services
         }
 
         // Get one genre by id
-        public async Task<OperationDetails<Genre>> GetByIdAsync(int id) {
+        public async Task<OperationDetails<Genre>> GetByIdAsync(Guid id) {
             try {
                 var genre = await _context.Genres.FindAsync(id);
                 return OperationDetails<Genre>.Success(genre);
