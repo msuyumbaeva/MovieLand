@@ -18,4 +18,9 @@
     <ProjectReference Include="..\MovieLand.Data\MovieLand.Data.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="wwwroot\posters\" />
+  </ItemGroup>
+
 </Project>

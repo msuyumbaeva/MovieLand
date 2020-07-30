@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MovieLand.BLL;
+using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
@@ -18,12 +21,14 @@ namespace MovieLand
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
+            swwwRootPath = env.WebRootPath;  //wwwroot folder path
         }
 
         public IConfiguration Configuration { get; }
+        public string swwwRootPath { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -47,6 +52,24 @@ namespace MovieLand
             // Setup entity services
             services.AddTransient<IGenreService, GenreService>();
             services.AddTransient<ICountryService, CountryService>();
+            services.AddTransient<ICountryService, CountryService>();
+            services.AddTransient<IMovieService, MovieService>();
+
+            services.AddScoped<IFileClient, LocalFileClient>(client => {
+                return new LocalFileClient(swwwRootPath);
+            });
+
+            // Setup custom configurations
+            var moviePosterFileConfiguration = Configuration.GetSection("MoviePosterFileConfiguration");
+            services.Configure<MoviePosterFileConfiguration>(moviePosterFileConfiguration);
+
+            // Setup mapping profiles
+            var mappingConfig = new MapperConfiguration(mc => {
+                mc.AddProfile(new MappingProfileBLL());
+            });
+
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
