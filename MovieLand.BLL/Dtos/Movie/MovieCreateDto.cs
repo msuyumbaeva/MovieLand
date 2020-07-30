@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using MovieLand.BLL.DataAnnotaions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,11 +17,14 @@ namespace MovieLand.BLL.Dtos.Movie
         public string OriginalName { get; set; }
 
         [Required]
+        [Range(0,short.MaxValue)]
         public short Duration { get; set; }
 
+        [Range(0, 100)]
         public byte MinAge { get; set; }
 
         [Required]
+        [Range(1800, 2030)]
         public int ReleaseYear { get; set; }
 
         [Required]
@@ -28,6 +32,8 @@ namespace MovieLand.BLL.Dtos.Movie
         public string Description { get; set; }
 
         [Required]
+        [FileExtension(Extensions = ".png,.jpg,.jpeg")]
+        [FileSize(5 * 1024)]
         public IFormFile Poster { get; set; }
     }
 }
