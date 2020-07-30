@@ -16,6 +16,7 @@ using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Models;
 
 namespace MovieLand
 {
@@ -65,6 +66,7 @@ namespace MovieLand
 
             // Setup mapping profiles
             var mappingConfig = new MapperConfiguration(mc => {
+                mc.AddProfile(new MappingProfile());
                 mc.AddProfile(new MappingProfileBLL());
             });
 

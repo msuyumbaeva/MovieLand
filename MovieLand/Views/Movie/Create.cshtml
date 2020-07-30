@@ -1,4 +1,4 @@
-﻿@model MovieLand.BLL.Dtos.Movie.MovieCreateDto
+﻿@model MovieLand.ViewModels.Movie.MovieCreateViewModel
 
 @{
     ViewData["Title"] = "Create";
@@ -9,7 +9,7 @@
 <h4>Добавить новый</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
@@ -38,14 +38,22 @@
                 <span asp-validation-for="ReleaseYear" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Poster" class="control-label"></label>
                 <input asp-for="Poster" />
                 <span asp-validation-for="Poster" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Genres" class="control-label"></label>
+                <select id="genresSelectList" data-choice placeholder="Select genres" multiple asp-for="Genres"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Countries" class="control-label"></label>
+                <select id="countriesSelectList" data-choice placeholder="Select countries" multiple asp-for="Countries"></select>
             </div>
             <div class="form-group">
                 <input type="submit" value="Добавить" class="btn btn-primary" />
@@ -60,4 +68,33 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>        
+        $(document).ready(function () {
+            var genreChoices = new Choices('#genresSelectList');
+            var countryChoices = new Choices('#countriesSelectList');
+
+            // Passing a function that returns Promise of choices
+            genreChoices.setChoices(async () => {
+                try {
+                    const genresResult = await fetch('/Api/GenreApi/');
+                    const newGenres = formatArrayForChoices(await genresResult.json())
+                    return newGenres;
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+
+            // Passing a function that returns Promise of choices
+            countryChoices.setChoices(async () => {
+                try {
+                    const countriesResult = await fetch('/Api/CountryApi/');
+                    const newCountries = formatArrayForChoices(await countriesResult.json())
+                    return newCountries;
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+        })
+
+    </script>
 }

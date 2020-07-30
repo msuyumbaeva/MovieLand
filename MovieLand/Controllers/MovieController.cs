@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.ViewModels.Movie;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +13,11 @@ namespace MovieLand.Controllers
     public class MovieController: ControllerBase
     {
         private readonly IMovieService _movieService;
+        private readonly IMapper _mapper;
 
-        public MovieController(IMovieService movieService) {
+        public MovieController(IMovieService movieService, IMapper mapper) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         public IActionResult Index() {
@@ -28,15 +32,19 @@ namespace MovieLand.Controllers
         // POST: Movie/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(MovieCreateDto movie) {
+        public async Task<IActionResult> Create(MovieCreateViewModel movieViewModel) {
             if (ModelState.IsValid) {
-                var countriesResult = await _movieService.CreateAsync(movie);
-                if (countriesResult.IsSuccess)
+                var movieCreateDto = _mapper.Map<MovieCreateDto>(movieViewModel);
+                var movieResult = await _movieService.CreateAsync(movieCreateDto);
+                if (movieResult.IsSuccess) {
+                    await _movieService.SetGenres(movieResult.Entity.Id, movieViewModel.Genres);
+                    await _movieService.SetCountries(movieResult.Entity.Id, movieViewModel.Countries);
                     return RedirectToAction(nameof(Index));
+                }
                 else
-                    AddErrors(countriesResult.Errors);
+                    AddErrors(movieResult.Errors);
             }
-            return View(movie);
+            return View(movieViewModel);
         }
     }
 }

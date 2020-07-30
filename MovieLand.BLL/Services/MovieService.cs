@@ -52,9 +52,81 @@ namespace MovieLand.BLL.Services
             }
         }
 
+        // Add genres to movie
+        public async Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres) {
+            try {
+                // Find movie by id
+                var movie = await _context.Movies.FindAsync(movieId);
+                if (movie == null)
+                    throw new Exception($"Movie with id {movieId} wasn't found.");
+
+                // Get current genres of movie
+                var currentMovieGenres = await _context.MovieGenres.Where(m => m.MovieId == movieId).Select(m => m.GenreId).ToListAsync();
+                
+                // Get genres that not already exist
+                var movieGenresToAdd = genres.Except(currentMovieGenres);    
+                // Add genres
+                foreach(var genre in movieGenresToAdd) {
+                    await _context.MovieGenres.AddAsync(new MovieGenre() { MovieId = movieId, GenreId = genre });
+                }
+
+                // Get genres that not exist in set list
+                var movieGenresToDelete = currentMovieGenres.Except(genres);
+                // Remove genres
+                foreach (var genre in movieGenresToDelete) {
+                    var entitiesToDelete = await _context.MovieGenres.Where(m=>m.MovieId == movieId && m.GenreId == genre).FirstOrDefaultAsync();
+                    _context.MovieGenres.Remove(entitiesToDelete);
+                }
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Add countries to movie
+        public async Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries) {
+            try {
+                // Find movie by id
+                var movie = await _context.Movies.FindAsync(movieId);
+                if (movie == null)
+                    throw new Exception($"Movie with id {movieId} wasn't found.");
+
+                // Get current countries of movie
+                var currentMovieCountries = await _context.MovieContries.Where(m => m.MovieId == movieId).Select(m => m.CountryId).ToListAsync();
+
+                // Get countries that not already exist
+                var movieCountriesToAdd = countries.Except(currentMovieCountries);
+                // Add countries
+                foreach (var country in movieCountriesToAdd) {
+                    await _context.MovieContries.AddAsync(new MovieCountry() { MovieId = movieId, CountryId = country });
+                }
+
+                // Get countries that not exist in set list
+                var movieCountriesToDelete = currentMovieCountries.Except(countries);
+                // Remove countries
+                foreach (var country in movieCountriesToDelete) {
+                    var entitiesToDelete = await _context.MovieContries.Where(m => m.MovieId == movieId && m.CountryId == country).FirstOrDefaultAsync();
+                    _context.MovieContries.Remove(entitiesToDelete);
+                }
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
         // Saves poster
         // Returns new file name
-        public async Task<string> SavePoster(IFormFile formFile) {
+        private async Task<string> SavePoster(IFormFile formFile) {
             // Generate unique file name
             var fileName = string.Concat(DateTime.Now.ToBinary(),formFile.FileName);
 
