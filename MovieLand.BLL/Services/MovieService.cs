@@ -7,8 +7,12 @@ using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +39,7 @@ namespace MovieLand.BLL.Services
                 // Save poster
                 var posterFileName = await SavePoster(movieDto.Poster);
 
+                // Save movie to db
                 var movie = _mapper.Map<Movie>(movieDto);
                 movie.Poster = posterFileName;
                 var movieEntry = await _context.Movies.AddAsync(movie);
@@ -47,15 +52,28 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        // Save poster
+        // Saves poster
         // Returns new file name
         public async Task<string> SavePoster(IFormFile formFile) {
+            // Generate unique file name
             var fileName = string.Concat(DateTime.Now.ToBinary(),formFile.FileName);
 
-            using (var fileStream = formFile.OpenReadStream()) {
-                await _fileClient.SaveFileAsync(_fileConfiguration.Directory, fileName, fileStream);
+            // Resize image and save to stream
+            var outputStream = new MemoryStream();
+            using (var image = Image.Load(formFile.OpenReadStream())) {
+                image.Mutate(x => x.Resize(_fileConfiguration.Width, _fileConfiguration.Height));
+                image.SaveAsJpeg(outputStream);
             }
 
+            // Activate stream
+            outputStream.Seek(0, SeekOrigin.Begin);
+
+            // Make file client save image
+            using (outputStream) {
+                await _fileClient.SaveFileAsync(_fileConfiguration.Directory, fileName, outputStream);
+            }
+
+            // Return new file name
             return fileName;
         }
     }

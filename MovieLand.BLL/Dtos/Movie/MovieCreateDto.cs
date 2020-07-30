@@ -33,7 +33,7 @@ namespace MovieLand.BLL.Dtos.Movie
 
         [Required]
         [FileExtension(Extensions = ".png,.jpg,.jpeg")]
-        [FileSize(5 * 1024)]
+        [FileSize(1024 * 1024)]
         public IFormFile Poster { get; set; }
     }
 }
