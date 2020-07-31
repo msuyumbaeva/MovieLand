@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.Models;
 using MovieLand.ViewModels.Movie;
 using System;
 using System.Collections.Generic;
@@ -20,8 +22,13 @@ namespace MovieLand.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public IActionResult Index() {
-            return View();
+        // GET: Movie/Index?page=1
+        public async Task<IActionResult> Index(int? page) {
+            var pageSize = 10;
+            var moviesResult = await _movieService.GetAllAsync(new Page(page ?? 1, pageSize));
+
+            var viewModel = new PaginatedList<MovieListItemDto>(moviesResult.Entity.Items, moviesResult.Entity.TotalAmount, moviesResult.Entity.Page.Number, pageSize);
+            return View(viewModel);
         }
 
         // GET: Movie/Create

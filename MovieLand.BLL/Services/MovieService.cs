@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
@@ -153,6 +155,30 @@ namespace MovieLand.BLL.Services
                 return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
         }
+
+        // Get movies list by page request
+        public async Task<OperationDetails<MovieListDto>> GetAllAsync(Page page) {
+            try {
+                var source = _context.Movies;
+
+                // Get total amount of movies
+                var moviesTotalAmount = await source.CountAsync();
+                // Get movies
+                var movies = await source.Skip((page.Number - 1) * page.Size).Take(page.Size).ProjectTo<MovieListItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+
+                // Create dto
+                var dto = new MovieListDto(movies) {
+                    TotalAmount = moviesTotalAmount,
+                    Page = page
+                };
+
+                return OperationDetails<MovieListDto>.Success(dto);
+            }
+            catch (Exception ex) {
+                return OperationDetails<MovieListDto>.Failure().AddError(ex.Message);
+            }
+        }
+
         #endregion Interface implementations
     }
 }

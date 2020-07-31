@@ -1,4 +1,5 @@
-﻿using MovieLand.BLL.Dtos.Movie;
+﻿using MovieLand.BLL.Dtos;
+using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,6 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<MovieDto>> CreateAsync(MovieCreateDto movieDto);
         Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres);
         Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries);
+        Task<OperationDetails<MovieListDto>> GetAllAsync(Page page);
     }
 }

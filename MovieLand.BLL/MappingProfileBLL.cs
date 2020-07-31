@@ -20,6 +20,7 @@ namespace MovieLand.BLL
         private void MovieMapping() {
             CreateMap<MovieCreateDto, Movie>();
             CreateMap<Movie, MovieDto>();
+            CreateMap<Movie, MovieListItemDto>();
         }
 
         private void GenreMapping() {
