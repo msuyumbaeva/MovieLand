@@ -4,9 +4,9 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Фильм</h1>
+<h1>Create</h1>
 
-<h4>Добавить новый</h4>
+<h4>Movie</h4>
 <hr />
 <div class="row">
     <div class="col-md-6">
@@ -56,14 +56,14 @@
                 <select id="countriesSelectList" data-choice placeholder="Select countries" multiple asp-for="Countries"></select>
             </div>
             <div class="form-group">
-                <input type="submit" value="Добавить" class="btn btn-primary" />
+                <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Назад к списку</a>
+    <a asp-action="Index">Back to list</a>
 </div>
 
 @section Scripts {

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos.Country;
 using MovieLand.Data.Models;
 
 namespace MovieLand.ApiControllers
@@ -21,7 +22,7 @@ namespace MovieLand.ApiControllers
 
         // GET: api/GenreApi
         [HttpGet]
-        public async Task<IEnumerable<Country>> Get() {
+        public async Task<IEnumerable<CountryDto>> Get() {
             var genresResult = await _countryService.GetAllAsync();
             return genresResult.Entity;
         }

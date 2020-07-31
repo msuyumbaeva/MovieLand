@@ -62,21 +62,23 @@ namespace MovieLand.BLL.Services
 
         #region Interface implementations
         // Create movie
-        public async Task<OperationDetails<Movie>> CreateAsync(MovieCreateDto movieDto) {
+        public async Task<OperationDetails<MovieDto>> CreateAsync(MovieCreateDto movieCreateDto) {
             try {
                 // Save poster
-                var posterFileName = await SavePoster(movieDto.Poster);
+                var posterFileName = await SavePoster(movieCreateDto.Poster);
 
                 // Save movie to db
-                var movie = _mapper.Map<Movie>(movieDto);
+                var movie = _mapper.Map<Movie>(movieCreateDto);
                 movie.Poster = posterFileName;
                 var movieEntry = await _context.Movies.AddAsync(movie);
                 await _context.SaveChangesAsync();
 
-                return OperationDetails<Movie>.Success(movieEntry.Entity);
+                // Map dto
+                var movieDto = _mapper.Map<MovieDto>(movieEntry.Entity);
+                return OperationDetails<MovieDto>.Success(movieDto);
             }
             catch (Exception ex) {
-                return OperationDetails<Movie>.Failure().AddError(ex.Message);
+                return OperationDetails<MovieDto>.Failure().AddError(ex.Message);
             }
         }
 

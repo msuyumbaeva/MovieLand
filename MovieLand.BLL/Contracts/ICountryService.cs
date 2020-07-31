@@ -1,4 +1,5 @@
-﻿using MovieLand.Data.Models;
+﻿using MovieLand.BLL.Dtos.Country;
+using MovieLand.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,12 +11,12 @@ namespace MovieLand.BLL.Contracts
     public interface ICountryService
     {
         // Get all countries
-        Task<OperationDetails<IEnumerable<Country>>> GetAllAsync();
+        Task<OperationDetails<IEnumerable<CountryDto>>> GetAllAsync();
         // Get one country by id
-        Task<OperationDetails<Country>> GetByIdAsync(Guid id);
+        Task<OperationDetails<CountryDto>> GetByIdAsync(Guid id);
         // Create country
-        Task<OperationDetails<Country>> CreateAsync(Country country);
+        Task<OperationDetails<CountryDto>> CreateAsync(CountryDto country);
         // Edit country
-        Task<OperationDetails<Country>> EditAsync(Country country);
+        Task<OperationDetails<CountryDto>> EditAsync(CountryDto country);
     }
 }

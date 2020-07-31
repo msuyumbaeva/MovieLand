@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
-using MovieLand.Data.Models;
+using MovieLand.BLL.Dtos.Country;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace MovieLand.Controllers
@@ -33,7 +31,7 @@ namespace MovieLand.Controllers
         // POST: Country/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Country country) {
+        public async Task<IActionResult> Create(CountryDto country) {
             if (ModelState.IsValid) {
                 var countriesResult = await _countryService.CreateAsync(country);
                 if (countriesResult.IsSuccess)
@@ -56,7 +54,7 @@ namespace MovieLand.Controllers
         // POST: Country/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Country country) {
+        public async Task<IActionResult> Edit(CountryDto country) {
             if (ModelState.IsValid) {
                 var countriesResult = await _countryService.EditAsync(country);
                 if (countriesResult.IsSuccess)

@@ -1,7 +1,6 @@
-﻿using MovieLand.Data.Models;
+﻿using MovieLand.BLL.Dtos.Genre;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MovieLand.BLL.Contracts
@@ -10,12 +9,12 @@ namespace MovieLand.BLL.Contracts
     public interface IGenreService
     {
         // Get all genres
-        Task<OperationDetails<IEnumerable<Genre>>> GetAllAsync();
+        Task<OperationDetails<IEnumerable<GenreDto>>> GetAllAsync();
         // Get one genre by id
-        Task<OperationDetails<Genre>> GetByIdAsync(Guid id);
+        Task<OperationDetails<GenreDto>> GetByIdAsync(Guid id);
         // Create genre
-        Task<OperationDetails<Genre>> CreateAsync(Genre genre);
+        Task<OperationDetails<GenreDto>> CreateAsync(GenreDto genre);
         // Edit genre
-        Task<OperationDetails<Genre>> EditAsync(Genre genre);
+        Task<OperationDetails<GenreDto>> EditAsync(GenreDto genre);
     }
 }

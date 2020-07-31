@@ -9,7 +9,7 @@ namespace MovieLand.BLL.Contracts
 {
     public interface IMovieService
     {
-        Task<OperationDetails<Movie>> CreateAsync(MovieCreateDto movieDto);
+        Task<OperationDetails<MovieDto>> CreateAsync(MovieCreateDto movieDto);
         Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres);
         Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries);
     }

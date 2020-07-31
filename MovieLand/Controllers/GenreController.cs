@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
-using MovieLand.Data.Models;
+using MovieLand.BLL.Dtos.Genre;
 
 namespace MovieLand.Controllers
 {
@@ -36,7 +33,7 @@ namespace MovieLand.Controllers
         // POST: Genre/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Genre genre)
+        public async Task<IActionResult> Create(GenreDto genre)
         {
             if (ModelState.IsValid) {
                 var genresResult = await _genreService.CreateAsync(genre);
@@ -61,7 +58,7 @@ namespace MovieLand.Controllers
         // POST: Genre/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Genre genre)
+        public async Task<IActionResult> Edit(GenreDto genre)
         {
             if (ModelState.IsValid) {
                 var genresResult = await _genreService.EditAsync(genre);
