@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +17,7 @@ using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Data.Models;
 using MovieLand.Models;
 
 namespace MovieLand
@@ -50,6 +52,21 @@ namespace MovieLand
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connection);
 
+            // Setup identity
+            services.AddIdentity<AppUser, AppRole>(o => {
+                // configure identity options
+                o.Password.RequireDigit = false;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
+                o.Password.RequiredLength = 6;
+            })
+                .AddUserManager<AppUserManager>()
+                .AddRoleManager<AppRoleManager>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddSignInManager()
+                .AddDefaultTokenProviders();
+
             // Setup entity services
             services.AddTransient<IGenreService, GenreService>();
             services.AddTransient<ICountryService, CountryService>();
@@ -77,7 +94,7 @@ namespace MovieLand
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, AppUserManager userManager, AppRoleManager roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -93,6 +110,10 @@ namespace MovieLand
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
+            app.UseAuthentication();
+
+            DataInitializer.SeedRoles(roleManager).Wait();
+            DataInitializer.SeedUsers(userManager).Wait();
 
             app.UseMvc(routes =>
             {
