@@ -24,7 +24,7 @@ namespace MovieLand.BLL.Services
             try {
                 var countriesWithSameName = await _context.Countries.Where(g => g.Name == country.Name).CountAsync();
                 if (countriesWithSameName > 0) {
-                    throw new Exception($"Жанр с наименованием {country.Name} уже существует");
+                    throw new Exception($"Country with name {country.Name} is already exists");
                 }
 
                 var countryEntry = await _context.Countries.AddAsync(country);
@@ -42,12 +42,12 @@ namespace MovieLand.BLL.Services
             try {
                 var dbCountry = await _context.Countries.FindAsync(country.Id);
                 if (dbCountry == null) {
-                    throw new Exception($"Жанр с Id {country.Id} не найден");
+                    throw new Exception($"Country with Id {country.Id} was not found");
                 }
 
                 var countriesWithSameName = await _context.Countries.Where(g => g.Name == country.Name && g.Id != country.Id).CountAsync();
                 if (countriesWithSameName > 0) {
-                    throw new Exception($"Жанр с наименованием {country.Name} уже существует");
+                    throw new Exception($"Country with name {country.Name} is already exists");
                 }
 
                 dbCountry.Name = country.Name;

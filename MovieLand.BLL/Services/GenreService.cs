@@ -26,7 +26,7 @@ namespace MovieLand.BLL.Services
 
                 var genresWithSameName = await _context.Genres.Where(g => g.Name == genre.Name).CountAsync();
                 if(genresWithSameName > 0) {
-                    throw new Exception($"Жанр с наименованием {genre.Name} уже существует");
+                    throw new Exception($"Genre with name {genre.Name} is already exists");
                 }
 
                 var genreEntry = await _context.Genres.AddAsync(genre);
@@ -44,14 +44,14 @@ namespace MovieLand.BLL.Services
             try {
                 var dbGenre = await _context.Genres.FindAsync(genre.Id);
                 if(dbGenre == null) {
-                    throw new Exception($"Жанр с Id {genre.Id} не найден");
+                    throw new Exception($"Genre with Id {genre.Id} was not found");
                 }
 
                 genre.Name = genre.Name.ToLower();
 
                 var genresWithSameName = await _context.Genres.Where(g => g.Name == genre.Name && g.Id != genre.Id).CountAsync();
                 if (genresWithSameName > 0) {
-                    throw new Exception($"Жанр с наименованием {genre.Name} уже существует");
+                    throw new Exception($"Genre with name {genre.Name} is already exists");
                 }
 
                 dbGenre.Name = genre.Name;

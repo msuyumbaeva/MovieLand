@@ -33,6 +33,34 @@ namespace MovieLand.BLL.Services
             _fileConfiguration = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
+        #region Private methods
+        // Saves poster
+        // Returns new file name
+        private async Task<string> SavePoster(IFormFile formFile) {
+            // Generate unique file name
+            var fileName = string.Concat(DateTime.Now.ToBinary(), formFile.FileName);
+
+            // Resize image and save to stream
+            var outputStream = new MemoryStream();
+            using (var image = Image.Load(formFile.OpenReadStream())) {
+                image.Mutate(x => x.Resize(_fileConfiguration.Width, _fileConfiguration.Height));
+                image.SaveAsJpeg(outputStream);
+            }
+
+            // Activate stream
+            outputStream.Seek(0, SeekOrigin.Begin);
+
+            // Make file client save image
+            using (outputStream) {
+                await _fileClient.SaveFileAsync(_fileConfiguration.Directory, fileName, outputStream);
+            }
+
+            // Return new file name
+            return fileName;
+        }
+        #endregion Private methods
+
+        #region Interface implementations
         // Create movie
         public async Task<OperationDetails<Movie>> CreateAsync(MovieCreateDto movieDto) {
             try {
@@ -58,7 +86,7 @@ namespace MovieLand.BLL.Services
                 // Find movie by id
                 var movie = await _context.Movies.FindAsync(movieId);
                 if (movie == null)
-                    throw new Exception($"Movie with id {movieId} wasn't found.");
+                    throw new Exception($"Movie with id {movieId} was not found.");
 
                 // Get current genres of movie
                 var currentMovieGenres = await _context.MovieGenres.Where(m => m.MovieId == movieId).Select(m => m.GenreId).ToListAsync();
@@ -94,7 +122,7 @@ namespace MovieLand.BLL.Services
                 // Find movie by id
                 var movie = await _context.Movies.FindAsync(movieId);
                 if (movie == null)
-                    throw new Exception($"Movie with id {movieId} wasn't found.");
+                    throw new Exception($"Movie with id {movieId} was not found.");
 
                 // Get current countries of movie
                 var currentMovieCountries = await _context.MovieContries.Where(m => m.MovieId == movieId).Select(m => m.CountryId).ToListAsync();
@@ -123,30 +151,6 @@ namespace MovieLand.BLL.Services
                 return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
         }
-
-        // Saves poster
-        // Returns new file name
-        private async Task<string> SavePoster(IFormFile formFile) {
-            // Generate unique file name
-            var fileName = string.Concat(DateTime.Now.ToBinary(),formFile.FileName);
-
-            // Resize image and save to stream
-            var outputStream = new MemoryStream();
-            using (var image = Image.Load(formFile.OpenReadStream())) {
-                image.Mutate(x => x.Resize(_fileConfiguration.Width, _fileConfiguration.Height));
-                image.SaveAsJpeg(outputStream);
-            }
-
-            // Activate stream
-            outputStream.Seek(0, SeekOrigin.Begin);
-
-            // Make file client save image
-            using (outputStream) {
-                await _fileClient.SaveFileAsync(_fileConfiguration.Directory, fileName, outputStream);
-            }
-
-            // Return new file name
-            return fileName;
-        }
+        #endregion Interface implementations
     }
 }
