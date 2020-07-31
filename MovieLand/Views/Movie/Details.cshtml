@@ -1,0 +1,71 @@
+﻿@model MovieLand.BLL.Dtos.Movie.MovieDto
+
+@{
+    ViewData["Title"] = "Details";
+    var coma = ", ";
+}
+
+<div class="mt-5">
+    <div class="row">
+        <div class="col-sm-4">
+            <img src="~/posters/@Model.Poster" width="300" height="450" />
+        </div>
+        <div class="col-sm-8">
+            <h1>@Html.DisplayFor(model => model.Name)</h1>
+            <h5>@Html.DisplayFor(model => model.OriginalName) <span class="badge badge-primary">@Html.DisplayFor(model => model.MinAge)+</span> </h5>
+            <dl class="row mt-5">
+                <dt class="col-sm-2">
+                    Release year
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.ReleaseYear)
+                </dd>
+                <dt class="col-sm-2">
+                    Country
+                </dt>
+                <dd class="col-sm-10">
+                    @for (var i = 0; i < Model.Countries.Count; i++) {
+                        @Model.Countries.ElementAt(i)?.Name
+                        @if (i < Model.Countries.Count - 1) {
+                            @coma
+                        }
+                    }
+                </dd>
+                <dt class="col-sm-2">
+                    Genre
+                </dt>
+                <dd class="col-sm-10">
+                    @for (var i = 0; i < Model.Genres.Count; i++) {
+                        @Model.Genres.ElementAt(i)?.Name
+                        @if (i < Model.Genres.Count - 1) {
+                            @coma
+                        }
+                    }
+                </dd>
+                <dt class="col-sm-2">
+                    Age
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.MinAge)+
+                </dd>
+                <dt class="col-sm-2">
+                    Duration
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Duration) min
+                </dd>
+            </dl>
+        </div>
+        <div class="col">
+            <div class="my-3 font-weight-bold">Overview</div>
+            <div class="mb-3">
+                @Html.DisplayFor(model => model.Description)
+            </div>
+        </div>
+    </div>
+    
+</div>
+<div>
+    @Html.ActionLink("Edit", "Edit", new { /* id = Model.PrimaryKey */ }) |
+    <a asp-action="Index">Back to List</a>
+</div>

@@ -14,7 +14,7 @@
         <li class="list-group-item d-inline-flex">
             <img src="~/posters/@item.Poster" width="58" height="84" class="mr-3" />
             <div class="movie-about">
-                <p class="movie-name mb-1"><a href="#">@item.Name</a> <span class="movie-year">@item.ReleaseYear</span></p>
+                <p class="movie-name mb-1"><a asp-action="Details" asp-route-id="@item.Id">@item.Name</a> <span class="movie-year">@item.ReleaseYear</span></p>
                 <span class="text-secondary">@item.OriginalName, @item.Duration min</span>
             </div>
         </li>

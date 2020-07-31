@@ -31,8 +31,16 @@ namespace MovieLand.Controllers
             return View(viewModel);
         }
 
-        // GET: Movie/Create
-        public IActionResult Create() {
+        public async Task<IActionResult> Details(Guid id) {
+            var movieResult = await _movieService.GetById(id);
+            if (movieResult.Entity == null)
+                return NotFound();
+            else
+                return View(movieResult.Entity);
+        }
+
+// GET: Movie/Create
+public IActionResult Create() {
             return View();
         }
 

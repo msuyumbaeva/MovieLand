@@ -14,5 +14,6 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres);
         Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries);
         Task<OperationDetails<MovieListDto>> GetAllAsync(Page page);
+        Task<OperationDetails<MovieDto>> GetById(Guid id);
     }
 }

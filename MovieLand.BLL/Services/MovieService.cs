@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
+using MovieLand.BLL.Dtos.Country;
+using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
@@ -176,6 +178,37 @@ namespace MovieLand.BLL.Services
             }
             catch (Exception ex) {
                 return OperationDetails<MovieListDto>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<MovieDto>> GetById(Guid id) {
+            try {
+                var movie = await _context.Movies
+                    .ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
+                    .Where(m=>m.Id == id)
+                    .FirstOrDefaultAsync();
+
+                if (movie == null)
+                    throw new Exception($"Movie with Id {id} was not found");
+
+                var genres = await _context.MovieGenres
+                    .Include(m => m.Genre)
+                    .Where(m => m.MovieId == id).Select(m => m.Genre)
+                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                movie.Genres = genres;
+
+                var countries = await _context.MovieContries
+                    .Include(m => m.Country)
+                    .Where(m => m.MovieId == id).Select(m => m.Country)
+                    .ProjectTo<CountryDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+                movie.Countries = countries;
+
+                return OperationDetails<MovieDto>.Success(movie);
+            }
+            catch (Exception ex) {
+                return OperationDetails<MovieDto>.Failure().AddError(ex.Message);
             }
         }
 
