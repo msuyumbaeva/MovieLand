@@ -64,7 +64,7 @@ namespace MovieLand
                 .AddUserManager<AppUserManager>()
                 .AddRoleManager<AppRoleManager>()
                 .AddEntityFrameworkStores<AppDbContext>()
-                .AddSignInManager()
+                .AddSignInManager<AppSignInManager>()
                 .AddDefaultTokenProviders();
 
             // Setup entity services

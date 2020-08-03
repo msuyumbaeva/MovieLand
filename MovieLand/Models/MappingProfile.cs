@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.BLL.Dtos.User;
+using MovieLand.ViewModels.Account;
 using MovieLand.ViewModels.Movie;
 using System;
 using System.Collections.Generic;
@@ -12,10 +14,15 @@ namespace MovieLand.Models
     {
         public MappingProfile() {
             MovieMapping();
+            UserMapping();
         }
 
         private void MovieMapping() {
             CreateMap<MovieCreateViewModel, MovieCreateDto>();
+        }
+
+        private void UserMapping() {
+            CreateMap<RegisterViewModel, UserDto>();
         }
     }
 }

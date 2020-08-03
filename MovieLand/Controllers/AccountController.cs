@@ -1,18 +1,24 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+﻿using System;
+using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using MovieLand.Data.Models;
+using MovieLand.BLL.Dtos.User;
+using MovieLand.BLL.Enums;
+using MovieLand.BLL.Services;
 using MovieLand.ViewModels.Account;
 
 namespace MovieLand.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly SignInManager<AppUser> _signInManager;
+        private readonly AppSignInManager _signInManager;
+        private readonly AppUserManager _userManager;
+        private readonly IMapper _mapper;
 
-        public AccountController(SignInManager<AppUser> signInManager)
-        {
-            _signInManager = signInManager;
+        public AccountController(AppSignInManager signInManager, AppUserManager userManager, IMapper mapper) {
+            _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         public IActionResult Login()
@@ -40,6 +46,32 @@ namespace MovieLand.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        public IActionResult Register() {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel model) {
+            if (ModelState.IsValid) {
+                // Map to userDto
+                var user = _mapper.Map<UserDto>(model);
+                user.Roles.Add(RoleEnum.USER.ToString());
+                // Add user
+                var result = await _userManager.CreateAsync(user);
+                if (result.Succeeded) {
+                    // Sign in
+                    await _signInManager.PasswordSignInAsync(user.UserName,user.Password, false, false);
+                    return RedirectToAction("Index", "Home");
+                }
+                else {
+                    foreach (var error in result.Errors) {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+            return View(model);
         }
 
         #region Helpers        
