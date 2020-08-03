@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MovieLand.Data.Enums;
+using MovieLand.Data.Extensions;
 using MovieLand.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,7 @@ namespace MovieLand.Data.ApplicationDbContext
         public DbSet<MovieCountry> MovieContries { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Country> Countries { get; set; }
+        public DbSet<Career> Careers { get; set; }
         #endregion DbSets
 
         #region Overrides
@@ -26,6 +29,8 @@ namespace MovieLand.Data.ApplicationDbContext
             //Set composite keys to entities
             modelBuilder.Entity<MovieGenre>().HasKey(sc => new { sc.MovieId, sc.GenreId });
             modelBuilder.Entity<MovieCountry>().HasKey(sc => new { sc.MovieId, sc.CountryId });
+
+            modelBuilder.SeedEnumValues<Career, CareerEnum>(e => new Career(e));
         }
         #endregion Overrides
     }

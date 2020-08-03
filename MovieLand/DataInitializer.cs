@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MovieLand.BLL.Enums;
 using MovieLand.BLL.Services;
+using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
 using System;
 using System.Threading.Tasks;
