@@ -23,6 +23,11 @@
                 <span asp-validation-for="OriginalName" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="ReleaseYear" class="control-label"></label>
+                <input asp-for="ReleaseYear" class="form-control" />
+                <span asp-validation-for="ReleaseYear" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="Duration" class="control-label"></label>
                 <input asp-for="Duration" class="form-control" />
                 <span asp-validation-for="Duration" class="text-danger"></span>
@@ -33,19 +38,9 @@
                 <span asp-validation-for="MinAge" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ReleaseYear" class="control-label"></label>
-                <input asp-for="ReleaseYear" class="form-control" />
-                <span asp-validation-for="ReleaseYear" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="Poster" class="control-label"></label>
                 <input asp-for="Poster" />
                 <span asp-validation-for="Poster" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <textarea asp-for="Description" class="form-control"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Genres" class="control-label"></label>
@@ -64,6 +59,11 @@
             <div class="form-group">
                 <label for="Artists[1].Items" class="control-label">Actors</label>
                 <select id="actorsSelectList" data-choice placeholder="Select actors" multiple asp-for="Artists[1].Items"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
@@ -92,10 +92,10 @@
         }
 
         $(document).ready(async function () {
-            var genreChoices = new Choices('#genresSelectList');
-            var countryChoices = new Choices('#countriesSelectList');
-            var directorChoices = new Choices('#directorsSelectList');
-            var actorChoices = new Choices('#actorsSelectList');
+            var genreChoices = new Choices('#genresSelectList', { removeItemButton: true });
+            var countryChoices = new Choices('#countriesSelectList', { removeItemButton: true });
+            var directorChoices = new Choices('#directorsSelectList', { removeItemButton: true });
+            var actorChoices = new Choices('#actorsSelectList', { removeItemButton: true });
 
             // Passing a function that returns Promise of choices
             genreChoices.setChoices(async () => {

@@ -25,9 +25,11 @@ namespace MovieLand.ViewModels.Movie
 
         [Required]
         [Range(0, short.MaxValue)]
+        [Display(Name = "Duration (min)")]
         public short Duration { get; set; }
 
         [Range(0, 100)]
+        [Display(Name = "Minimum age")]
         public byte MinAge { get; set; }
 
         [Required]
@@ -46,10 +48,6 @@ namespace MovieLand.ViewModels.Movie
         public Guid[] Countries { get; set; }
 
         public Guid[] Genres { get; set; }
-
-        //public Guid[] Directors { get; set; }
-
-        //public Guid[] Actors { get; set; }
 
         public List<NamedArray<Guid>> Artists { get; set; }
     }
