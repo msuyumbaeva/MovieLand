@@ -72,6 +72,7 @@ namespace MovieLand
             services.AddTransient<ICountryService, CountryService>();
             services.AddTransient<ICountryService, CountryService>();
             services.AddTransient<IMovieService, MovieService>();
+            services.AddTransient<IArtistService, ArtistService>();
 
             services.AddScoped<IFileClient, LocalFileClient>(client => {
                 return new LocalFileClient(swwwRootPath);
