@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MovieLand.BLL.DataAnnotaions;
+using MovieLand.Data.Enums;
+using MovieLand.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -9,8 +11,11 @@ using System.Threading.Tasks;
 
 namespace MovieLand.ViewModels.Movie
 {
-    public class MovieCreateViewModel
-    {
+    public class MovieCreateViewModel {
+        public MovieCreateViewModel() {
+            Artists = new List<NamedArray<Guid>>();
+        }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
@@ -41,5 +46,11 @@ namespace MovieLand.ViewModels.Movie
         public Guid[] Countries { get; set; }
 
         public Guid[] Genres { get; set; }
+
+        //public Guid[] Directors { get; set; }
+
+        //public Guid[] Actors { get; set; }
+
+        public List<NamedArray<Guid>> Artists { get; set; }
     }
 }

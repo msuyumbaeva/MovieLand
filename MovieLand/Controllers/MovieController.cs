@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.Data.Enums;
 using MovieLand.Models;
 using MovieLand.ViewModels.Movie;
 using System;
@@ -48,12 +49,31 @@ public IActionResult Create() {
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MovieCreateViewModel movieViewModel) {
+            // Check if model is valid
             if (ModelState.IsValid) {
+                // Map to dto
                 var movieCreateDto = _mapper.Map<MovieCreateDto>(movieViewModel);
+                // Create movie
                 var movieResult = await _movieService.CreateAsync(movieCreateDto);
+                // If created successfully
                 if (movieResult.IsSuccess) {
-                    await _movieService.SetGenres(movieResult.Entity.Id, movieViewModel.Genres);
-                    await _movieService.SetCountries(movieResult.Entity.Id, movieViewModel.Countries);
+                    var movieId = movieResult.Entity.Id;
+                    // Set genres of movie
+                    await _movieService.SetGenres(movieId, movieViewModel.Genres);
+
+                    // Set countries of movie
+                    await _movieService.SetCountries(movieId, movieViewModel.Countries);
+
+                    // Add movie artists
+                    foreach (var artists in movieViewModel.Artists) {
+                        var career = (CareerEnum)Enum.Parse(typeof(CareerEnum), artists.Name, true);
+                        for (int j = 0; j < artists.Items.Length; j++) {
+                            var artistDto = new MovieArtistDto(artists.Items[j], career, (byte)(j + 1));
+                            await _movieService.AddArtist(movieId, artistDto);
+                        }
+                    }
+
+                    // Redirect to index action
                     return RedirectToAction(nameof(Index));
                 }
                 else

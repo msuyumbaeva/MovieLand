@@ -23,6 +23,8 @@ namespace MovieLand.BLL
             CreateMap<MovieCreateDto, Movie>();
             CreateMap<Movie, MovieDto>();
             CreateMap<Movie, MovieListItemDto>();
+            CreateMap<MovieArtistDto, MovieArtist>()
+                .ReverseMap();
         }
 
         private void GenreMapping() {

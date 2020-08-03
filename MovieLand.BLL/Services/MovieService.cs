@@ -6,10 +6,12 @@ using Microsoft.Extensions.Options;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
+using MovieLand.BLL.Dtos.Artist;
 using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Data.Enums;
 using MovieLand.Data.Models;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
@@ -205,10 +207,73 @@ namespace MovieLand.BLL.Services
                     .ToListAsync();
                 movie.Countries = countries;
 
+                var directors = await _context.MovieArtists
+                    .Where(m => m.MovieId == id && m.CareerId == CareerEnum.Director)
+                    .Include(m => m.Artist)
+                    .OrderBy(m => m.Priority)   
+                    .Select(m => 
+                        new MovieArtistDto(m.ArtistId, m.CareerId, m.Priority) {
+                            Artist = new ArtistDto() {
+                                Id = m.Artist.Id, Name = m.Artist.Name
+                            }
+                        })
+                    .ToListAsync();
+                movie.Directors = directors;
+
+                var actors = await _context.MovieArtists
+                    .Where(m => m.MovieId == id && m.CareerId == CareerEnum.Actor)
+                    .Include(m => m.Artist)
+                    .OrderBy(m => m.Priority)
+                    .Select(m =>
+                        new MovieArtistDto(m.ArtistId, m.CareerId, m.Priority) {
+                            Artist = new ArtistDto() {
+                                Id = m.Artist.Id,
+                                Name = m.Artist.Name
+                            }
+                        })
+                    .ToListAsync();
+                movie.Actors = actors;
+
                 return OperationDetails<MovieDto>.Success(movie);
             }
             catch (Exception ex) {
                 return OperationDetails<MovieDto>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<bool>> AddArtist(Guid movieId, MovieArtistDto artist) {
+            try {
+                var movie = await _context.Movies.FindAsync(movieId);
+                if (movie == null)
+                    throw new Exception($"Movie with Id {movieId} was not found");
+
+                var movieArtist = _mapper.Map<MovieArtist>(artist);
+                movieArtist.MovieId = movieId;
+
+                var movieArtistEntry = await _context.MovieArtists.AddAsync(movieArtist);
+                await _context.SaveChangesAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<bool>> RemoveArtist(Guid movieId, MovieArtistDto artist) {
+            try {
+                var movieArtist = await _context.MovieArtists
+                    .Where(m => m.MovieId == movieId && m.ArtistId == artist.ArtistId && m.CareerId == artist.CareerId)
+                    .FirstOrDefaultAsync();
+
+                if(movieArtist == null)
+                    throw new Exception($"Artist {artist.ArtistId} as {artist.CareerId.ToString()} in movie {movieId} was not found");
+
+                _context.Remove(movieArtist);
+                await _context.SaveChangesAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
         }
 

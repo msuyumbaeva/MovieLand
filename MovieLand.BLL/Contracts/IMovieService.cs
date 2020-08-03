@@ -15,5 +15,7 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries);
         Task<OperationDetails<MovieListDto>> GetAllAsync(Page page);
         Task<OperationDetails<MovieDto>> GetById(Guid id);
+        Task<OperationDetails<bool>> AddArtist(Guid movieId, MovieArtistDto artist);
+        Task<OperationDetails<bool>> RemoveArtist(Guid movieId, MovieArtistDto artist);
     }
 }

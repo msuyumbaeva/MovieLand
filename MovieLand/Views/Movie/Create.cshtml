@@ -55,6 +55,16 @@
                 <label asp-for="Countries" class="control-label"></label>
                 <select id="countriesSelectList" data-choice placeholder="Select countries" multiple asp-for="Countries"></select>
             </div>
+            @Html.Hidden("Artists[0].Name", "Director")
+            <div class="form-group">
+                <label for="Artists[0].Items" class="control-label">Directors</label>
+                <select id="directorsSelectList" data-choice placeholder="Select directors" multiple asp-for="Artists[0].Items"></select>
+            </div>
+            @Html.Hidden("Artists[1].Name", "Actor")
+            <div class="form-group">
+                <label for="Artists[1].Items" class="control-label">Actors</label>
+                <select id="actorsSelectList" data-choice placeholder="Select actors" multiple asp-for="Artists[1].Items"></select>
+            </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
@@ -68,10 +78,24 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script>        
-        $(document).ready(function () {
+    <script>   
+
+        // Send request to get artists
+        const getArtists = async () => {
+            try {
+                const countriesResult = await fetch('/Api/ArtistApi/');
+                const newCountries = formatArrayForChoices(await countriesResult.json())
+                return newCountries;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        $(document).ready(async function () {
             var genreChoices = new Choices('#genresSelectList');
             var countryChoices = new Choices('#countriesSelectList');
+            var directorChoices = new Choices('#directorsSelectList');
+            var actorChoices = new Choices('#actorsSelectList');
 
             // Passing a function that returns Promise of choices
             genreChoices.setChoices(async () => {
@@ -94,6 +118,15 @@
                     console.error(err);
                 }
             });
+
+            // Get artists list
+            const artists = await getArtists()
+
+            // Set artists to directors select list
+            directorChoices.setChoices(artists);
+
+            // Set artists to actors select list
+            actorChoices.setChoices(artists);
         })
 
     </script>

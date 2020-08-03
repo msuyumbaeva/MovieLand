@@ -21,6 +21,7 @@ namespace MovieLand.Data.ApplicationDbContext
         public DbSet<Country> Countries { get; set; }
         public DbSet<Career> Careers { get; set; }
         public DbSet<Artist> Artists { get; set; }
+        public DbSet<MovieArtist> MovieArtists { get; set; }
         #endregion DbSets
 
         #region Overrides
@@ -30,6 +31,7 @@ namespace MovieLand.Data.ApplicationDbContext
             //Set composite keys to entities
             modelBuilder.Entity<MovieGenre>().HasKey(sc => new { sc.MovieId, sc.GenreId });
             modelBuilder.Entity<MovieCountry>().HasKey(sc => new { sc.MovieId, sc.CountryId });
+            modelBuilder.Entity<MovieArtist>().HasKey(sc => new { sc.MovieId, sc.ArtistId, sc.CareerId });
 
             modelBuilder.SeedEnumValues<Career, CareerEnum>(e => new Career(e));
         }
