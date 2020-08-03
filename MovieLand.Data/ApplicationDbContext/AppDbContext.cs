@@ -20,6 +20,7 @@ namespace MovieLand.Data.ApplicationDbContext
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<Career> Careers { get; set; }
+        public DbSet<Artist> Artists { get; set; }
         #endregion DbSets
 
         #region Overrides

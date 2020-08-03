@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MovieLand.BLL.Dtos.Artist;
 using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
@@ -15,6 +16,7 @@ namespace MovieLand.BLL
             MovieMapping();
             GenreMapping();
             CountryMapping();
+            ArtistMapping();
         }
 
         private void MovieMapping() {
@@ -30,6 +32,11 @@ namespace MovieLand.BLL
 
         private void CountryMapping() {
             CreateMap<Country, CountryDto>()
+                .ReverseMap();
+        }
+
+        private void ArtistMapping() {
+            CreateMap<Artist, ArtistDto>()
                 .ReverseMap();
         }
     }
