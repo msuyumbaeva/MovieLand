@@ -26,47 +26,37 @@ namespace MovieLand.BLL.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        // Create genre
-        public async Task<OperationDetails<GenreDto>> CreateAsync(GenreDto genreDto) {
+        // Create or edit genre
+        public async Task<OperationDetails<GenreDto>> SaveAsync(GenreDto genreDto) {
             try {
+                // Change name to lower case
                 genreDto.Name = genreDto.Name.ToLower();
 
-                var genresWithSameName = await _context.Genres.Where(g => g.Name == genreDto.Name).CountAsync();
-                if(genresWithSameName > 0) {
-                    throw new Exception($"Genre with name {genreDto.Name} is already exists");
-                }
-
-                var genre = _mapper.Map<Genre>(genreDto);
-                var genreEntry = await _context.Genres.AddAsync(genre);
-                await _context.SaveChangesAsync();
-
-                genreDto = _mapper.Map<GenreDto>(genreEntry.Entity);
-                return OperationDetails<GenreDto>.Success(genreDto);
-            }
-            catch (Exception ex) {
-                return OperationDetails<GenreDto>.Failure().AddError(ex.Message);
-            }
-        }
-
-        // Edit genre
-        public async Task<OperationDetails<GenreDto>> EditAsync(GenreDto genreDto) {
-            try {
-                var dbGenre = await _context.Genres.FindAsync(genreDto.Id);
-                if(dbGenre == null) {
-                    throw new Exception($"Genre with Id {genreDto.Id} was not found");
-                }
-
-                genreDto.Name = genreDto.Name.ToLower();
-
+                // Check if genre already exists
                 var genresWithSameName = await _context.Genres.Where(g => g.Name == genreDto.Name && g.Id != genreDto.Id).CountAsync();
                 if (genresWithSameName > 0) {
                     throw new Exception($"Genre with name {genreDto.Name} is already exists");
                 }
 
-                dbGenre.Name = genreDto.Name;
-                var genreEntry = _context.Genres.Update(dbGenre);
+                // Map dto to genre 
+                var genre = _mapper.Map<Genre>(genreDto);
+
+                EntityEntry<Genre> genreEntry = null;
+
+                // Check if genre Id is empty
+                if (genre.Id == Guid.Empty) {
+                    // Add new genre
+                    genreEntry = await _context.Genres.AddAsync(genre);
+                }
+                else {
+                    // Update existing genre
+                    genreEntry = _context.Genres.Update(genre);
+                }
+
+                // Save changes
                 await _context.SaveChangesAsync();
 
+                // Map genre to dto
                 genreDto = _mapper.Map<GenreDto>(genreEntry.Entity);
                 return OperationDetails<GenreDto>.Success(genreDto);
             }

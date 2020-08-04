@@ -13,10 +13,8 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<IEnumerable<GenreDto>>> GetAllAsync();
         // Get one genre by id
         Task<OperationDetails<GenreDto>> GetByIdAsync(Guid id);
-        // Create genre
-        Task<OperationDetails<GenreDto>> CreateAsync(GenreDto genre);
-        // Edit genre
-        Task<OperationDetails<GenreDto>> EditAsync(GenreDto genre);
+        // Create or Edit genre
+        Task<OperationDetails<GenreDto>> SaveAsync(GenreDto genre);
 
         Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetDataAsync(DataTablesParameters table);
     }

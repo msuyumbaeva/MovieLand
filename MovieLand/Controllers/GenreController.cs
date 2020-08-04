@@ -37,21 +37,8 @@ namespace MovieLand.Controllers
 
         // GET: Genre/Create
         public IActionResult Create() {
-            return View();
-        }
-
-        // POST: Genre/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(GenreDto genre) {
-            if (ModelState.IsValid) {
-                var genresResult = await _genreService.CreateAsync(genre);
-                if (genresResult.IsSuccess)
-                    return RedirectToAction(nameof(Index));
-                else
-                    AddErrors(genresResult.Errors);
-            }
-            return View(genre);
+            var genreDto = new GenreDto();
+            return View("Edit", genreDto);
         }
 
         // GET: Genre/Edit/5
