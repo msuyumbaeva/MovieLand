@@ -2,7 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Genre;
+using MovieLand.Models;
 
 namespace MovieLand.Controllers
 {
@@ -15,26 +17,33 @@ namespace MovieLand.Controllers
         }
 
         // GET: Genre
-        public async Task<IActionResult> Index() 
-        {
-            var genresResult = await _genreService.GetAllAsync();
-            if (genresResult.IsSuccess)
-                return View(genresResult.Entity);
-            else
-                return RedirectToAction("Error", "Home");
+        public IActionResult Index() {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LoadTable([FromBody] DataTablesParameters param) {
+            var result = await _genreService.GetDataAsync(param);
+            if (result.IsSuccess) {
+                return new JsonResult(new DataTablesResult<GenreDto> {
+                    Draw = param.Draw,
+                    Data = result.Entity.Items,
+                    RecordsFiltered = result.Entity.TotalSize,
+                    RecordsTotal = result.Entity.TotalSize
+                });
+            }
+            return new JsonResult(new { error = "Internal Server Error" });
         }
 
         // GET: Genre/Create
-        public IActionResult Create()
-        {
+        public IActionResult Create() {
             return View();
         }
 
         // POST: Genre/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(GenreDto genre)
-        {
+        public async Task<IActionResult> Create(GenreDto genre) {
             if (ModelState.IsValid) {
                 var genresResult = await _genreService.CreateAsync(genre);
                 if (genresResult.IsSuccess)
@@ -61,7 +70,7 @@ namespace MovieLand.Controllers
         public async Task<IActionResult> Edit(GenreDto genre)
         {
             if (ModelState.IsValid) {
-                var genresResult = await _genreService.EditAsync(genre);
+                var genresResult = await _genreService.SaveAsync(genre);
                 if (genresResult.IsSuccess)
                     return RedirectToAction(nameof(Index));
                 else

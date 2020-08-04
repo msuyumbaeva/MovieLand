@@ -19,6 +19,7 @@ using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
 using MovieLand.Models;
+using Newtonsoft.Json.Serialization;
 
 namespace MovieLand
 {
@@ -91,7 +92,9 @@ namespace MovieLand
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver())
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

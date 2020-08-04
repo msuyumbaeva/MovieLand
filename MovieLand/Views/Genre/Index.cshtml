@@ -1,6 +1,4 @@
-﻿@model IEnumerable<MovieLand.BLL.Dtos.Genre.GenreDto>
-
-@{
+﻿@{
     ViewData["Title"] = "Index";
 }
 
@@ -9,25 +7,63 @@
 <p>
     <a asp-action="Create">Add new</a>
 </p>
-<table class="table table-sm">
+<table id="genres-table" class="table table-sm">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
+            <th>Id</th>
+            <th>Name</th>
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id=item.Id }) 
-            </td>
-        </tr>
-}
-    </tbody>
 </table>
+
+@section Scripts {
+    <script src="~/datatables//js/jquery.dataTables.js" asp-append-version="true"></script>
+    <script src="~/datatables//js/dataTables.bootstrap4.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function () {
+            t = $("#genres-table").DataTable({
+                // Design Assets
+                stateSave: true,
+                autoWidth: true,
+                // ServerSide Setups
+                processing: true,
+                serverSide: true,
+                // Paging Setups
+                paging: true,
+                // Searching Setups
+                searching: { regex: true },
+                ajax: {
+                    url: '/Genre/LoadTable/',
+                    type: 'POST',
+                    contentType: "application/json; charset=utf-8",
+
+                    data: function (d) {
+                        return JSON.stringify(d);
+                    }
+                },
+                columns: [
+                    { data: 'Id', visible: false, searchable: false, orderable: false },
+                    { data: 'Name', name: "Name" },
+                    {
+                        searchable: false,
+                        orderable: false,
+                        render: function (data, type, full, meta) {
+                            return `<a onClick="editdata('${full.Id}')" href="javascript://">Edit</a>`;
+                        }
+                    }
+                ],
+                order: [[1,'asc']],
+                responsive: true
+            });
+        })
+
+        function editdata (id) {
+            const url = '@Url.Action("Edit", "Genre")';
+            console.log(url)
+            window.location.replace(url + `/${id}`)
+        }
+
+    </script>
+}
+

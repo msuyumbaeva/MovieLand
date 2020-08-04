@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Models;
@@ -93,6 +95,51 @@ namespace MovieLand.BLL.Services
             }
             catch (Exception ex) {
                 return OperationDetails<GenreDto>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetDataAsync(DataTablesParameters table) {
+            try {
+                GenreDto[] items = null;
+                IQueryable<Genre> query = _context.Genres;
+
+                // Filter
+                if (!string.IsNullOrEmpty(table.Search.Value)) {
+                    query = query.Where(g => g.Name.Contains(table.Search.Value));
+                }
+
+                // Sorting
+                if (table.Order[0].Dir == DTOrderDir.ASC)
+                    query = query.OrderBy(m => m.Name);
+                else
+                    query = query.OrderByDescending(m => m.Name);
+
+                // Get total size
+                var size = await query.CountAsync();
+
+                // Pagination
+                if (table.Length > 0) {
+                    items = await query
+                    .Skip((table.Start / table.Length) * table.Length)
+                    .Take(table.Length)
+                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
+                    .ToArrayAsync();
+                }
+                else {
+                    items = await query
+                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
+                    .ToArrayAsync();
+                }
+
+                // Return result
+                var result = new DataTablesPagedResults<GenreDto> {
+                    Items = items,
+                    TotalSize = size
+                };
+                return OperationDetails<DataTablesPagedResults<GenreDto>>.Success(result);
+            }
+            catch (Exception ex) {
+                return OperationDetails<DataTablesPagedResults<GenreDto>>.Failure().AddError(ex.Message);
             }
         }
     }

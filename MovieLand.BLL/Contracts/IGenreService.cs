@@ -1,4 +1,5 @@
-﻿using MovieLand.BLL.Dtos.Genre;
+﻿using MovieLand.BLL.Dtos.DataTables;
+using MovieLand.BLL.Dtos.Genre;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,5 +17,7 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<GenreDto>> CreateAsync(GenreDto genre);
         // Edit genre
         Task<OperationDetails<GenreDto>> EditAsync(GenreDto genre);
+
+        Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetDataAsync(DataTablesParameters table);
     }
 }
