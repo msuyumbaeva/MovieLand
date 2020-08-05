@@ -1,0 +1,13 @@
+﻿<script src="~/js/choices.min.js" asp-append-version="true"></script>
+<script>
+    const formatArrayForChoices = function (array) {
+        const newArray = new Array()
+        array.map(a => {
+            newArray.push({
+                "value": a["Id"],
+                "label": a["Name"]
+            })
+        })
+        return newArray;
+    }
+</script>
