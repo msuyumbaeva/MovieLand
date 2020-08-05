@@ -4,7 +4,7 @@
             searchable: false,
             orderable: false,
             render: function (data, type, full, meta) {
-                return `<a onClick="editdata('${editUrl},${full.Id}')" href="javascript://">Edit</a>`;
+                return `<a onClick="editdata('${editUrl}','${full.Id}')" href="javascript://">Edit</a>`;
             }
         })
     }
@@ -35,5 +35,5 @@
 }
 
 function editdata(url, id) {
-    window.location.replace(url + `/${id}`)
+    window.location.href = url + `/${id}`
 }
