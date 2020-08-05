@@ -7,7 +7,7 @@
 <p>
     <a asp-action="Create">Add new</a>
 </p>
-<table id="genres-table" class="table table-sm">
+<table id="data-table" class="table table-sm">
     <thead>
         <tr>
             <th>Id</th>
@@ -19,50 +19,6 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_DataTablesScriptsPartial");}
-    <script>
-        $(document).ready(function () {
-            t = $("#genres-table").DataTable({
-                // Design Assets
-                stateSave: true,
-                autoWidth: true,
-                // ServerSide Setups
-                processing: true,
-                serverSide: true,
-                // Paging Setups
-                paging: true,
-                // Searching Setups
-                searching: { regex: true },
-                ajax: {
-                    url: '/Genre/LoadTable/',
-                    type: 'POST',
-                    contentType: "application/json; charset=utf-8",
-
-                    data: function (d) {
-                        return JSON.stringify(d);
-                    }
-                },
-                columns: [
-                    { data: 'Id', visible: false, searchable: false, orderable: false },
-                    { data: 'Name', name: "Name" },
-                    {
-                        searchable: false,
-                        orderable: false,
-                        render: function (data, type, full, meta) {
-                            return `<a onClick="editdata('${full.Id}')" href="javascript://">Edit</a>`;
-                        }
-                    }
-                ],
-                order: [[1,'asc']],
-                responsive: true
-            });
-        })
-
-        function editdata (id) {
-            const url = '@Url.Action("Edit", "Genre")';
-            console.log(url)
-            window.location.replace(url + `/${id}`)
-        }
-
-    </script>
+    <script src="~/js/genreIndex.js"></script>
 }
 
