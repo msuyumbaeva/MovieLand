@@ -17,7 +17,9 @@ using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Data.Contracts.Repositories;
 using MovieLand.Data.Models;
+using MovieLand.Data.Repositories;
 using MovieLand.Models;
 using Newtonsoft.Json.Serialization;
 
@@ -74,6 +76,8 @@ namespace MovieLand
             services.AddTransient<ICountryService, CountryService>();
             services.AddTransient<IMovieService, MovieService>();
             services.AddTransient<IArtistService, ArtistService>();
+
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<IFileClient, LocalFileClient>(client => {
                 return new LocalFileClient(swwwRootPath);

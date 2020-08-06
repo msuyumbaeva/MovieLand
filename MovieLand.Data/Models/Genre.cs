@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MovieLand.Data.Models
 {
-    public class Genre
+    public class Genre 
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

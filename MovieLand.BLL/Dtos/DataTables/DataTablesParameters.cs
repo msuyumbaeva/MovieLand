@@ -48,7 +48,7 @@ namespace MovieLand.BLL.Dtos.DataTables
         /// Custom column that is used to further sort on the first Order column.
         /// </summary>
         public string SortOrder => Columns != null && Order != null && Order.Length > 0
-                    ? (Columns[Order[0].Column].Data + (Order[0].Dir == DTOrderDir.DESC ? " " + Order[0].Dir : string.Empty))
+                    ? Columns[Order[0].Column].Data
                     : null;
 
     }
