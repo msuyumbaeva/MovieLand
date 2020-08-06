@@ -9,6 +9,7 @@ namespace MovieLand.Data.Contracts.Repositories
     public interface IUnitOfWork
     {
         IGenreRepository Genres { get; }
+        ICountryRepository Countries { get; }
 
         Task<int> CompleteAsync();
         void BeginTransaction();

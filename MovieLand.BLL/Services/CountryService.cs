@@ -3,65 +3,56 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Country;
+using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Data.Builders;
+using MovieLand.Data.Contracts.Repositories;
 using MovieLand.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MovieLand.BLL.Services
 {
     // CountryService class to manage countries
-    public class CountryService: ICountryService
+    public class CountryService: BaseService, ICountryService
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
-
-        public CountryService(AppDbContext context, IMapper mapper) {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        public CountryService(IMapper mapper, IUnitOfWork unitOfWork) : base(mapper, unitOfWork) {
         }
 
-        // Create country
-        public async Task<OperationDetails<CountryDto>> CreateAsync(CountryDto countryDto) {
+        // Create or Edit country
+        public async Task<OperationDetails<CountryDto>> SaveAsync(CountryDto countryDto) {
             try {
-                var countriesWithSameName = await _context.Countries.Where(g => g.Name == countryDto.Name).CountAsync();
-                if (countriesWithSameName > 0) {
-                    throw new Exception($"Country with name {countryDto.Name} is already exists");
+                // Check if country already exists
+                // Build query
+                var queryBuilder = new EntityQueryBuilder<Country>();
+                queryBuilder.SetFilter(g => g.Name == countryDto.Name && g.Id != countryDto.Id);
+                var countriesWithSameName = await _unitOfWork.Countries.GetAsync(queryBuilder);
+                if (countriesWithSameName.Count() > 0) {
+                    throw new Exception($"Country with the name {countryDto.Name} is already exists");
                 }
 
+                // Map dto to country 
                 var country = _mapper.Map<Country>(countryDto);
-                var countryEntry = await _context.Countries.AddAsync(country);
-                await _context.SaveChangesAsync();
 
-                countryDto = _mapper.Map<CountryDto>(countryEntry.Entity);
-                return OperationDetails<CountryDto>.Success(countryDto);
-            }
-            catch (Exception ex) {
-                return OperationDetails<CountryDto>.Failure().AddError(ex.Message);
-            }
-        }
-
-        // Edit country
-        public async Task<OperationDetails<CountryDto>> EditAsync(CountryDto countryDto) {
-            try {
-                var dbCountry = await _context.Countries.FindAsync(countryDto.Id);
-                if (dbCountry == null) {
-                    throw new Exception($"Country with Id {countryDto.Id} was not found");
+                // Check if country Id is empty
+                if (country.Id == Guid.Empty) {
+                    // Add new country
+                    country = await _unitOfWork.Countries.AddAsync(country);
+                }
+                else {
+                    // Update existing country
+                    _unitOfWork.Countries.Update(country);
                 }
 
-                var countriesWithSameName = await _context.Countries.Where(g => g.Name == countryDto.Name && g.Id != countryDto.Id).CountAsync();
-                if (countriesWithSameName > 0) {
-                    throw new Exception($"Country with name {countryDto.Name} is already exists");
-                }
+                // Save changes
+                await _unitOfWork.CompleteAsync();
 
-                dbCountry.Name = countryDto.Name;
-                var countryEntry = _context.Countries.Update(dbCountry);
-                await _context.SaveChangesAsync();
-
-                countryDto = _mapper.Map<CountryDto>(countryEntry.Entity);
+                // Map country to dto
+                countryDto = _mapper.Map<CountryDto>(country);
                 return OperationDetails<CountryDto>.Success(countryDto);
             }
             catch (Exception ex) {
@@ -73,8 +64,9 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<IEnumerable<CountryDto>>> GetAllAsync() {
 
             try {
-                var countries = await _context.Countries.ProjectTo<CountryDto>(_mapper.ConfigurationProvider).ToListAsync();
-                return OperationDetails<IEnumerable<CountryDto>>.Success(countries);
+                var countries = await _unitOfWork.Countries.GetAllAsync();
+                var dto = _mapper.Map<List<CountryDto>>(countries);
+                return OperationDetails<IEnumerable<CountryDto>>.Success(dto);
             }
             catch (Exception ex) {
                 return OperationDetails<IEnumerable<CountryDto>>.Failure().AddError(ex.Message);
@@ -84,12 +76,64 @@ namespace MovieLand.BLL.Services
         // Get one country by id
         public async Task<OperationDetails<CountryDto>> GetByIdAsync(Guid id) {
             try {
-                var country = await _context.Countries.FindAsync(id);
+                var country = await _unitOfWork.Countries.GetByIdAsync(id);
                 var dto = _mapper.Map<CountryDto>(country);
                 return OperationDetails<CountryDto>.Success(dto);
             }
             catch (Exception ex) {
                 return OperationDetails<CountryDto>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Get countries by conditions
+        public async Task<OperationDetails<DataTablesPagedResults<CountryDto>>> GetAsync(DataTablesParameters table) {
+            try {
+                CountryDto[] items = null;
+                // Get total size
+                var size = await _unitOfWork.Genres.CountAsync();
+
+                /// Query building
+                var queryBuilder = new EntityQueryBuilder<Country>();
+
+                // Filter
+                if (!string.IsNullOrEmpty(table.Search.Value))
+                    queryBuilder.SetFilter(m => m.Name.Contains(table.Search.Value));
+
+                // Order
+                var order = table.Order[0];
+                Expression<Func<Country, string>> orderProperty = null;
+
+                // Order property
+                if (table.SortOrder == "Name")
+                    orderProperty = m => m.Name;
+
+                // Order direction
+                if (order.Dir == DTOrderDir.ASC)
+                    queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
+                else
+                    queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+
+                // Limit
+                queryBuilder.SetLimit(table.Length);
+
+                // Offset
+                queryBuilder.SetOffset((table.Start / table.Length) * table.Length);
+                /// End Query building
+
+                // Get countries
+                var countries = await _unitOfWork.Countries.GetAsync(queryBuilder);
+                // Map to dto
+                items = _mapper.Map<CountryDto[]>(countries);
+
+                // Return result
+                var result = new DataTablesPagedResults<CountryDto> {
+                    Items = items,
+                    TotalSize = size
+                };
+                return OperationDetails<DataTablesPagedResults<CountryDto>>.Success(result);
+            }
+            catch (Exception ex) {
+                return OperationDetails<DataTablesPagedResults<CountryDto>>.Failure().AddError(ex.Message);
             }
         }
     }

@@ -12,6 +12,7 @@ namespace MovieLand.Data.Repositories
     {
         private readonly AppDbContext _context;
         private IGenreRepository _genreRepository;
+        private ICountryRepository _countryRepository;
 
         private IDbContextTransaction _transaction;
 
@@ -21,6 +22,10 @@ namespace MovieLand.Data.Repositories
 
         public IGenreRepository Genres {
             get { return _genreRepository ?? (_genreRepository = new GenreRepository(_context)); }
+        }
+
+        public ICountryRepository Countries {
+            get { return _countryRepository ?? (_countryRepository = new CountryRepository(_context)); }
         }
 
         public Task<int> CompleteAsync() {
