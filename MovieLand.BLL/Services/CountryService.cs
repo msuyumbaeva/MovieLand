@@ -90,7 +90,7 @@ namespace MovieLand.BLL.Services
             try {
                 CountryDto[] items = null;
                 // Get total size
-                var size = await _unitOfWork.Genres.CountAsync();
+                var size = await _unitOfWork.Countries.CountAsync();
 
                 /// Query building
                 var queryBuilder = new EntityQueryBuilder<Country>();
