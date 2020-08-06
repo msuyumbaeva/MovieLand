@@ -1,4 +1,8 @@
-﻿<script>
-    const genreLoadTable = '@Url.Action("LoadTable", "Genre")';
-    const genreEdit = '@Url.Action("Edit", "Genre")';
+﻿<script type="text/javascript">
+    var Urls = Urls || {};
+
+    Urls.Genre = {
+        GetAll: '@Url.Action("LoadTable", "Genre")',
+		Edit: '@Url.Action("Edit", "Genre")'
+    }
 </script>

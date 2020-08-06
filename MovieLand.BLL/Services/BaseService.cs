@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MovieLand.BLL.Services
 {
-    public class BaseService
+    public abstract class BaseService
     {
         protected readonly IMapper _mapper;
         protected readonly IUnitOfWork _unitOfWork;

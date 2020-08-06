@@ -1,4 +1,4 @@
-﻿function setDataTable(dataUrl, editUrl, columns) {
+﻿function setDataTable(dataTable, dataUrl, editUrl, columns) {
     if (editUrl) {
         columns.push({
             searchable: false,
@@ -9,7 +9,7 @@
         })
     }
 
-    return $("#data-table").DataTable({
+    return $(dataTable).DataTable({
         // Design Assets
         stateSave: true,
         autoWidth: true,
