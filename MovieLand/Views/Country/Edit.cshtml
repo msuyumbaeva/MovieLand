@@ -1,12 +1,11 @@
 ﻿@model MovieLand.BLL.Dtos.Country.CountryDto
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = Model?.Name ?? "Create";
 }
 
-<h1>Edit</h1>
+<h1>Country</h1>
 
-<h4>Country</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
