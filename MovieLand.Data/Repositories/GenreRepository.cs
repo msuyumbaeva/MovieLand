@@ -16,9 +16,5 @@ namespace MovieLand.Data.Repositories
         public async Task<Genre> GetByIdAsync(Guid id) {
             return await DbSet.FindAsync(id);
         }
-
-        public IQueryable<Genre> GetByNamePart(string namePart) {
-            return DbSet.Where(g => g.Name.Contains(namePart));
-        }
     }
 }

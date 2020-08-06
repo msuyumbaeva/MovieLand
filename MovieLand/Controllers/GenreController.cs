@@ -23,7 +23,7 @@ namespace MovieLand.Controllers
 
         [HttpPost]
         public async Task<IActionResult> LoadTable([FromBody] DataTablesParameters param) {
-            var result = await _genreService.GetDataAsync(param);
+            var result = await _genreService.GetAsync(param);
             if (result.IsSuccess) {
                 return new JsonResult(new DataTablesResult<GenreDto> {
                     Draw = param.Draw,

@@ -37,7 +37,7 @@ namespace MovieLand.BLL.Services
                 queryBuilder.SetFilter(g => g.Name == genreDto.Name && g.Id != genreDto.Id);
                 var genresWithSameName = await _unitOfWork.Genres.GetAsync(queryBuilder);
                 if (genresWithSameName.Count() > 0) {
-                    throw new Exception($"Genre with name {genreDto.Name} is already exists");
+                    throw new Exception($"Genre with the name {genreDto.Name} is already exists");
                 }
 
                 // Map dto to genre 
@@ -89,7 +89,8 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        public async Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetDataAsync(DataTablesParameters table) {
+        // Get genres by conditions
+        public async Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetAsync(DataTablesParameters table) {
             try {
                 GenreDto[] items = null;
                 // Get total size

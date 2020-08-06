@@ -15,7 +15,7 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<GenreDto>> GetByIdAsync(Guid id);
         // Create or Edit genre
         Task<OperationDetails<GenreDto>> SaveAsync(GenreDto genre);
-
-        Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetDataAsync(DataTablesParameters table);
+        // Get genres by conditions
+        Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetAsync(DataTablesParameters table);
     }
 }
