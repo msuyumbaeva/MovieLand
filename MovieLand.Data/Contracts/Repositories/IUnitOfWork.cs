@@ -10,6 +10,7 @@ namespace MovieLand.Data.Contracts.Repositories
     {
         IGenreRepository Genres { get; }
         ICountryRepository Countries { get; }
+        IArtistRepository Artists { get; }
 
         Task<int> CompleteAsync();
         void BeginTransaction();
