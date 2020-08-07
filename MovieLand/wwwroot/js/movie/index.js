@@ -1,6 +1,6 @@
 ﻿$(document).ready(async function () {
     const dataUrl = Urls.Movie.GetAll;
-    const editUrl = null;
+    const editUrl = Urls.Movie.Edit;
     const columns = [
         {
             data: "Name",

@@ -19,6 +19,11 @@ namespace MovieLand.Models
 
         private void MovieMapping() {
             CreateMap<MovieCreateViewModel, MovieCreateDto>();
+            CreateMap<MovieDto, MovieCreateViewModel>()
+                .ForMember(dest=>dest.Poster, opt=>opt.Ignore())
+                .ForMember(dest=>dest.Genres, opt=>opt.Ignore())
+                .ForMember(dest=>dest.Countries, opt=>opt.Ignore())
+                .ForMember(dest=>dest.Artists, opt=>opt.Ignore());
         }
 
         private void UserMapping() {

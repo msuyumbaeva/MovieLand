@@ -11,8 +11,8 @@
 <div class="row">
     <div class="col-md-6">
         <form asp-action="Create" enctype="multipart/form-data">
-            @Html.Hidden("Id", Guid.Empty)
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @Html.HiddenFor(m=>m.Id)
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
@@ -81,5 +81,5 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     @{await Html.RenderPartialAsync("_ChoicesScriptsPartial");}
     <script src="~/js/choicesClient.js"></script>
-    <script src="~/js/movie/create.js"></script>
+    <script src="~/js/movie/edit.js"></script>
 }

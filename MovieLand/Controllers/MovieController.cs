@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
+using MovieLand.BLL.Dtos.Artist;
+using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.DataTables;
+using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.Enums;
 using MovieLand.Models;
@@ -90,6 +93,32 @@ namespace MovieLand.Controllers
                     AddErrors(movieResult.Errors);
             }
             return View(movieViewModel);
+        }
+
+        public async Task<IActionResult> Edit(Guid id) {
+            var result = await _movieService.GetById(id);
+            if (!result.IsSuccess)
+                return NotFound();
+
+            var dto = _mapper.Map<MovieCreateViewModel>(result.Entity);
+            dto.Artists.Add(new NamedArray<Guid>() { Name = CareerEnum.Director.ToString() });
+            dto.Artists.Add(new NamedArray<Guid>() { Name = CareerEnum.Actor.ToString() });
+            return View(dto);
+        }
+
+        public async Task<IEnumerable<GenreDto>> GetGenres(Guid id) {
+            var result = await _movieService.GetGenresOfMovie(id);
+            return result.Entity;
+        }
+
+        public async Task<IEnumerable<CountryDto>> GetCountries(Guid id) {
+            var result = await _movieService.GetCountriesOfMovie(id);
+            return result.Entity;
+        }
+
+        public async Task<IEnumerable<ArtistDto>> GetArtists(Guid id, CareerEnum career) {
+            var result = await _movieService.GetArtistsByCareerOfMovie(id, career);
+            return result.Entity;
         }
     }
 }

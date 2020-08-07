@@ -275,6 +275,39 @@ namespace MovieLand.BLL.Services
             }
         }
 
+        public async Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovie(Guid movieId) {
+            try {
+                var genres = await _unitOfWork.Movies.GetGenresByMovieAsync(movieId);
+                var dto = _mapper.Map<List<GenreDto>>(genres);
+                return OperationDetails<IEnumerable<GenreDto>>.Success(dto);
+            }
+            catch(Exception ex) {
+                return OperationDetails<IEnumerable<GenreDto>>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovie(Guid movieId) {
+            try {
+                var countries = await _unitOfWork.Movies.GetCountriesByMovieAsync(movieId);
+                var dto = _mapper.Map<List<CountryDto>>(countries);
+                return OperationDetails<IEnumerable<CountryDto>>.Success(dto);
+            }
+            catch (Exception ex) {
+                return OperationDetails<IEnumerable<CountryDto>>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovie(Guid movieId, CareerEnum career) {
+            try {
+                var artists = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(movieId, career);
+                var dto = _mapper.Map<List<ArtistDto>>(artists);
+                return OperationDetails<IEnumerable<ArtistDto>>.Success(dto);
+            }
+            catch (Exception ex) {
+                return OperationDetails<IEnumerable<ArtistDto>>.Failure().AddError(ex.Message);
+            }
+        }
+
         #endregion Interface implementations
     }
 }

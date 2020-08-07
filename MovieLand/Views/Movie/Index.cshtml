@@ -13,6 +13,7 @@
         <tr>
             <th>Name</th>
             <th>ReleaseYear</th>
+            <th></th>
         </tr>
     </thead>
 </table>
@@ -21,18 +22,6 @@
     @{await Html.RenderPartialAsync("_DataTablesScriptsPartial");}
     <script src="~/js/movie/index.js"></script>
 }
-
-@*<ul class="list-group list-group-flush mb-4 movie-list">
-    @foreach (var item in Model) {
-        <li class="list-group-item d-inline-flex">
-            <img src="~/posters/@item.Poster" width="58" height="84" class="mr-3" />
-            <div class="movie-about">
-                <p class="movie-name mb-1"><a asp-action="Details" asp-route-id="@item.Id">@item.Name</a> <span class="movie-year">@item.ReleaseYear</span></p>
-                <span class="text-secondary">@item.OriginalName, @item.Duration min</span>
-            </div>
-        </li>
-    }
-</ul>*@
 
 
 

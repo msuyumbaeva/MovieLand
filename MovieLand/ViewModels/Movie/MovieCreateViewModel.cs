@@ -16,6 +16,8 @@ namespace MovieLand.ViewModels.Movie
             Artists = new List<NamedArray<Guid>>();
         }
 
+        public Guid Id { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
