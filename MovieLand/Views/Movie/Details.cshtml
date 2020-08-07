@@ -47,7 +47,7 @@
                 </dt>
                 <dd class="col-sm-10">
                     @for (var i = 0; i < Model.Directors.Count; i++) {
-                        @Model.Directors.ElementAt(i)?.Artist?.Name
+                        @Model.Directors.ElementAt(i)?.Name
                         @if (i < Model.Directors.Count - 1) {
                             @coma
                         }
@@ -70,7 +70,7 @@
                 </dt>
                 <dd class="col-sm-10">
                     @for (var i = 0; i < Model.Actors.Count; i++) {
-                        @Model.Actors.ElementAt(i)?.Artist?.Name
+                        @Model.Actors.ElementAt(i)?.Name
                         @if (i < Model.Actors.Count - 1) {
                             @coma
                         }

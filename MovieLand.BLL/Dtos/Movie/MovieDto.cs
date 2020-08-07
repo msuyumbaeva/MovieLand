@@ -1,4 +1,5 @@
-﻿using MovieLand.BLL.Dtos.Country;
+﻿using MovieLand.BLL.Dtos.Artist;
+using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.Data.Enums;
 using System;
@@ -36,8 +37,8 @@ namespace MovieLand.BLL.Dtos.Movie
 
         public ICollection<CountryDto> Countries { get; set; }
 
-        public ICollection<MovieArtistDto> Directors { get; set; }
+        public ICollection<ArtistDto> Directors { get; set; }
 
-        public ICollection<MovieArtistDto> Actors { get; set; }
+        public ICollection<ArtistDto> Actors { get; set; }
     }
 }

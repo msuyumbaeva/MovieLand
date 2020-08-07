@@ -14,6 +14,7 @@ namespace MovieLand.Data.Repositories
         private IGenreRepository _genreRepository;
         private ICountryRepository _countryRepository;
         private IArtistRepository _artistRepository;
+        private IMovieRepository _movieRepository;
 
         private IDbContextTransaction _transaction;
 
@@ -31,6 +32,10 @@ namespace MovieLand.Data.Repositories
 
         public IArtistRepository Artists {
             get { return _artistRepository ?? (_artistRepository = new ArtistRepository(_context)); }
+        }
+
+        public IMovieRepository Movies {
+            get { return _movieRepository ?? (_movieRepository = new MovieRepository(_context)); }
         }
 
         public Task<int> CompleteAsync() {

@@ -1,5 +1,4 @@
-﻿@model PaginatedList<MovieLand.BLL.Dtos.Movie.MovieListItemDto>
-@{
+﻿@{
     ViewData["Title"] = "Index";
 }
 
@@ -9,7 +8,21 @@
     <a asp-action="Create">Create New</a>
 </p>
 
-<ul class="list-group list-group-flush mb-4 movie-list">
+<table id="data-table" class="table table-sm">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>ReleaseYear</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_DataTablesScriptsPartial");}
+    <script src="~/js/movie/index.js"></script>
+}
+
+@*<ul class="list-group list-group-flush mb-4 movie-list">
     @foreach (var item in Model) {
         <li class="list-group-item d-inline-flex">
             <img src="~/posters/@item.Poster" width="58" height="84" class="mr-3" />
@@ -19,46 +32,10 @@
             </div>
         </li>
     }
-</ul>
-
-
-@{
-    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
-    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
-    var pageStart = Math.Max(Model.PageIndex - 2, 1);
-    var pageEnd = Math.Min(Model.PageIndex + 2, Model.TotalPages);
-}
+</ul>*@
 
 
 
-<nav aria-label="Page navigation example">
-    <ul class="pagination">
-        <li class="page-item @prevDisabled">
-            <a asp-action="Index"
-               asp-route-page="@(Model.PageIndex - 1)"
-               class="page-link">
-                Previous
-            </a>
-        </li>
-
-        @for (var i = pageStart; i <= pageEnd; i++) {
-        <li class="page-item">
-            <a asp-action="Index"
-               asp-route-page="@i"
-               class="page-link">
-                @i
-            </a>
-        </li>
-        }
-        <li class="page-item @nextDisabled">
-            <a asp-action="Index"
-               asp-route-page="@(Model.PageIndex + 1)"
-               class="page-link">
-                Next
-            </a>
-        </li>
-    </ul>
-</nav>
 
 
 

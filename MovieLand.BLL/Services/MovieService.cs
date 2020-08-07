@@ -8,9 +8,12 @@ using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
 using MovieLand.BLL.Dtos.Artist;
 using MovieLand.BLL.Dtos.Country;
+using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.ApplicationDbContext;
+using MovieLand.Data.Builders;
+using MovieLand.Data.Contracts.Repositories;
 using MovieLand.Data.Enums;
 using MovieLand.Data.Models;
 using SixLabors.ImageSharp;
@@ -20,23 +23,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MovieLand.BLL.Services
 {
-    public class MovieService : IMovieService
+    public class MovieService : BaseService,IMovieService
     {
-        private readonly AppDbContext _context;
-        private readonly IMapper _mapper;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
         private readonly IFileClient _fileClient;
 
-        public MovieService(AppDbContext context, IMapper mapper, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> options) {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        public MovieService(IMapper mapper, IUnitOfWork unitOfWork, IOptions<MoviePosterFileConfiguration> fileConfiguration, IFileClient fileClient) :  base(mapper, unitOfWork){
+            _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
             _fileClient = fileClient ?? throw new ArgumentNullException(nameof(fileClient));
-            _fileConfiguration = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         #region Private methods
@@ -76,11 +76,11 @@ namespace MovieLand.BLL.Services
                 // Save movie to db
                 var movie = _mapper.Map<Movie>(movieCreateDto);
                 movie.Poster = posterFileName;
-                var movieEntry = await _context.Movies.AddAsync(movie);
-                await _context.SaveChangesAsync();
+                movie = await _unitOfWork.Movies.AddAsync(movie);
+                await _unitOfWork.CompleteAsync();
 
                 // Map dto
-                var movieDto = _mapper.Map<MovieDto>(movieEntry.Entity);
+                var movieDto = _mapper.Map<MovieDto>(movie);
                 return OperationDetails<MovieDto>.Success(movieDto);
             }
             catch (Exception ex) {
@@ -92,30 +92,29 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres) {
             try {
                 // Find movie by id
-                var movie = await _context.Movies.FindAsync(movieId);
+                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
                 if (movie == null)
                     throw new Exception($"Movie with id {movieId} was not found.");
 
                 // Get current genres of movie
-                var currentMovieGenres = await _context.MovieGenres.Where(m => m.MovieId == movieId).Select(m => m.GenreId).ToListAsync();
+                var currentMovieGenres = (await _unitOfWork.Movies.GetGenresByMovieAsync(movieId)).Select(g => g.Id);
                 
                 // Get genres that not already exist
                 var movieGenresToAdd = genres.Except(currentMovieGenres);    
                 // Add genres
                 foreach(var genre in movieGenresToAdd) {
-                    await _context.MovieGenres.AddAsync(new MovieGenre() { MovieId = movieId, GenreId = genre });
+                    await _unitOfWork.Movies.AddToGenreAsync(new MovieGenre() { GenreId = genre, MovieId = movieId });
                 }
 
                 // Get genres that not exist in set list
                 var movieGenresToDelete = currentMovieGenres.Except(genres);
                 // Remove genres
                 foreach (var genre in movieGenresToDelete) {
-                    var entitiesToDelete = await _context.MovieGenres.Where(m=>m.MovieId == movieId && m.GenreId == genre).FirstOrDefaultAsync();
-                    _context.MovieGenres.Remove(entitiesToDelete);
+                    _unitOfWork.Movies.RemoveFromGenre(new MovieGenre() { GenreId = genre, MovieId = movieId });
                 }
 
                 // Save changes
-                await _context.SaveChangesAsync();
+                await _unitOfWork.CompleteAsync();
 
                 return OperationDetails<bool>.Success(true);
             }
@@ -128,30 +127,29 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries) {
             try {
                 // Find movie by id
-                var movie = await _context.Movies.FindAsync(movieId);
+                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
                 if (movie == null)
                     throw new Exception($"Movie with id {movieId} was not found.");
 
                 // Get current countries of movie
-                var currentMovieCountries = await _context.MovieContries.Where(m => m.MovieId == movieId).Select(m => m.CountryId).ToListAsync();
+                var currentMovieCountries = (await _unitOfWork.Movies.GetCountriesByMovieAsync(movieId)).Select(c => c.Id);
 
                 // Get countries that not already exist
                 var movieCountriesToAdd = countries.Except(currentMovieCountries);
                 // Add countries
                 foreach (var country in movieCountriesToAdd) {
-                    await _context.MovieContries.AddAsync(new MovieCountry() { MovieId = movieId, CountryId = country });
+                    await _unitOfWork.Movies.AddToCountryAsync(new MovieCountry() { MovieId = movieId, CountryId = country });
                 }
 
                 // Get countries that not exist in set list
                 var movieCountriesToDelete = currentMovieCountries.Except(countries);
                 // Remove countries
                 foreach (var country in movieCountriesToDelete) {
-                    var entitiesToDelete = await _context.MovieContries.Where(m => m.MovieId == movieId && m.CountryId == country).FirstOrDefaultAsync();
-                    _context.MovieContries.Remove(entitiesToDelete);
+                    _unitOfWork.Movies.RemoveFromCountry(new MovieCountry() { MovieId = movieId, CountryId = country });
                 }
 
                 // Save changes
-                await _context.SaveChangesAsync();
+                await _unitOfWork.CompleteAsync();
 
                 return OperationDetails<bool>.Success(true);
             }
@@ -161,80 +159,80 @@ namespace MovieLand.BLL.Services
         }
 
         // Get movies list by page request
-        public async Task<OperationDetails<MovieListDto>> GetAllAsync(Page page) {
+        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(DataTablesParameters table) {
             try {
-                var source = _context.Movies;
+                MovieListItemDto[] items = null;
+                // Get total size
+                var size = await _unitOfWork.Movies.CountAsync();
 
-                // Get total amount of movies
-                var moviesTotalAmount = await source.CountAsync();
-                // Get movies
-                var movies = await source.Skip((page.Number - 1) * page.Size).Take(page.Size).ProjectTo<MovieListItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+                /// Query building
+                var queryBuilder = new EntityQueryBuilder<Movie>();
 
-                // Create dto
-                var dto = new MovieListDto(movies) {
-                    TotalAmount = moviesTotalAmount,
-                    Page = page
+                // Filter
+                if (!string.IsNullOrEmpty(table.Search.Value))
+                    queryBuilder.SetFilter(m => m.Name.Contains(table.Search.Value) || m.OriginalName.Contains(table.Search.Value) || m.ReleaseYear.ToString() == table.Search.Value);
+
+                // Order
+                var order = table.Order[0];
+                Expression<Func<Movie, object>> orderProperty = null;
+
+                // Order property
+                if (table.SortOrder == "Name")
+                    orderProperty = m => m.Name;
+                else if (table.SortOrder == "ReleaseYear")
+                    orderProperty = m => m.ReleaseYear;
+
+                // Order direction
+                if (order.Dir == DTOrderDir.ASC)
+                    queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
+                else
+                    queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+
+                // Limit
+                queryBuilder.SetLimit(table.Length);
+
+                // Offset
+                queryBuilder.SetOffset((table.Start / table.Length) * table.Length);
+                /// End Query building
+
+                // Get genres
+                var genres = await _unitOfWork.Movies.GetAsync(queryBuilder);
+                // Map to dto
+                items = _mapper.Map<MovieListItemDto[]>(genres);
+
+                // Return result
+                var result = new DataTablesPagedResults<MovieListItemDto> {
+                    Items = items,
+                    TotalSize = size
                 };
-
-                return OperationDetails<MovieListDto>.Success(dto);
+                return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
             }
             catch (Exception ex) {
-                return OperationDetails<MovieListDto>.Failure().AddError(ex.Message);
+                return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Failure().AddError(ex.Message);
             }
         }
 
         public async Task<OperationDetails<MovieDto>> GetById(Guid id) {
             try {
-                var movie = await _context.Movies
-                    .ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
-                    .Where(m=>m.Id == id)
-                    .FirstOrDefaultAsync();
-
+                var movie = await _unitOfWork.Movies.GetByIdAsync(id);
                 if (movie == null)
                     throw new Exception($"Movie with Id {id} was not found");
 
-                var genres = await _context.MovieGenres
-                    .Include(m => m.Genre)
-                    .Where(m => m.MovieId == id).Select(m => m.Genre)
-                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
-                movie.Genres = genres;
+                var movieDto = _mapper.Map<MovieDto>(movie);
 
-                var countries = await _context.MovieContries
-                    .Include(m => m.Country)
-                    .Where(m => m.MovieId == id).Select(m => m.Country)
-                    .ProjectTo<CountryDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
-                movie.Countries = countries;
+                var genres = await _unitOfWork.Movies.GetGenresByMovieAsync(id);
+                movieDto.Genres = _mapper.Map<List<GenreDto>>(genres);
 
-                var directors = await _context.MovieArtists
-                    .Where(m => m.MovieId == id && m.CareerId == CareerEnum.Director)
-                    .Include(m => m.Artist)
-                    .OrderBy(m => m.Priority)   
-                    .Select(m => 
-                        new MovieArtistDto(m.ArtistId, m.CareerId, m.Priority) {
-                            Artist = new ArtistDto() {
-                                Id = m.Artist.Id, Name = m.Artist.Name
-                            }
-                        })
-                    .ToListAsync();
-                movie.Directors = directors;
+                var countries = await _unitOfWork.Movies.GetCountriesByMovieAsync(id);
+                movieDto.Countries = _mapper.Map<List<CountryDto>>(countries);
 
-                var actors = await _context.MovieArtists
-                    .Where(m => m.MovieId == id && m.CareerId == CareerEnum.Actor)
-                    .Include(m => m.Artist)
-                    .OrderBy(m => m.Priority)
-                    .Select(m =>
-                        new MovieArtistDto(m.ArtistId, m.CareerId, m.Priority) {
-                            Artist = new ArtistDto() {
-                                Id = m.Artist.Id,
-                                Name = m.Artist.Name
-                            }
-                        })
-                    .ToListAsync();
-                movie.Actors = actors;
+                var directors = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(id, CareerEnum.Director);
+                movieDto.Directors = _mapper.Map<List<ArtistDto>>(directors);
 
-                return OperationDetails<MovieDto>.Success(movie);
+                var actors = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(id, CareerEnum.Actor);
+                movieDto.Actors = _mapper.Map<List<ArtistDto>>(actors);
+
+                return OperationDetails<MovieDto>.Success(movieDto);
             }
             catch (Exception ex) {
                 return OperationDetails<MovieDto>.Failure().AddError(ex.Message);
@@ -243,15 +241,15 @@ namespace MovieLand.BLL.Services
 
         public async Task<OperationDetails<bool>> AddArtist(Guid movieId, MovieArtistDto artist) {
             try {
-                var movie = await _context.Movies.FindAsync(movieId);
+                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
                 if (movie == null)
                     throw new Exception($"Movie with Id {movieId} was not found");
 
                 var movieArtist = _mapper.Map<MovieArtist>(artist);
                 movieArtist.MovieId = movieId;
 
-                var movieArtistEntry = await _context.MovieArtists.AddAsync(movieArtist);
-                await _context.SaveChangesAsync();
+                await _unitOfWork.Movies.AddToArtistAndCareerAsync(movieArtist);
+                await _unitOfWork.CompleteAsync();
                 return OperationDetails<bool>.Success(true);
             }
             catch (Exception ex) {
@@ -261,15 +259,13 @@ namespace MovieLand.BLL.Services
 
         public async Task<OperationDetails<bool>> RemoveArtist(Guid movieId, MovieArtistDto artist) {
             try {
-                var movieArtist = await _context.MovieArtists
-                    .Where(m => m.MovieId == movieId && m.ArtistId == artist.ArtistId && m.CareerId == artist.CareerId)
-                    .FirstOrDefaultAsync();
+                var movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareer(movieId, artist.ArtistId, artist.CareerId);
 
                 if(movieArtist == null)
                     throw new Exception($"Artist {artist.ArtistId} as {artist.CareerId.ToString()} in movie {movieId} was not found");
 
-                _context.Remove(movieArtist);
-                await _context.SaveChangesAsync();
+                _unitOfWork.Movies.RemoveFromArtistAndCareer(movieArtist);
+                await _unitOfWork.CompleteAsync();
                 return OperationDetails<bool>.Success(true);
             }
             catch (Exception ex) {

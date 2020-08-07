@@ -1,4 +1,4 @@
-﻿function setDataTable(dataTable, dataUrl, editUrl, columns) {
+﻿function setDataTable(dataTable, dataUrl, editUrl, columns, order = [1, 'asc']) {
     if (editUrl) {
         columns.push({
             searchable: false,
@@ -29,7 +29,7 @@
             }
         },
         columns,
-        order: [[1, 'asc']],
+        order: [order],
         responsive: true
     });
 }

@@ -1,6 +1,8 @@
 ﻿<script type="text/javascript">
     var Urls = Urls || {};
 
+    Urls.RelativeRoot = '@Url.Content("~")'
+
     Urls.Genre = {
         GetAll: '@Url.Action("LoadTable", "Genre")',
 		Edit: '@Url.Action("Edit", "Genre")'
@@ -14,6 +16,11 @@
     Urls.Artist = {
         GetAll: '@Url.Action("LoadTable", "Artist")',
 		Edit: '@Url.Action("Edit", "Artist")'
+    }
+
+    Urls.Movie = {
+        GetAll: '@Url.Action("LoadTable", "Movie")',
+        Details: '@Url.Action("Details", "Movie")'
     }
 
 </script>

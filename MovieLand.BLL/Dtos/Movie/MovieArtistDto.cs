@@ -9,9 +9,9 @@ namespace MovieLand.BLL.Dtos.Movie
 {
     public class MovieArtistDto
     {
-        public MovieArtistDto(Guid artistId, CareerEnum career, byte priority) {
+        public MovieArtistDto(Guid artistId, CareerEnum careerId, byte priority) {
             ArtistId = artistId;
-            CareerId = career;
+            CareerId = careerId;
             Priority = priority;
         }
 

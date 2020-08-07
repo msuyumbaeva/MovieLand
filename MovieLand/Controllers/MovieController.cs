@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
+using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.Enums;
 using MovieLand.Models;
@@ -23,13 +24,22 @@ namespace MovieLand.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        // GET: Movie/Index?page=1
-        public async Task<IActionResult> Index(int? page) {
-            var pageSize = 10;
-            var moviesResult = await _movieService.GetAllAsync(new Page(page ?? 1, pageSize));
+        // GET: Movie/Index
+        public IActionResult Index() {
+            return View();
+        }
 
-            var viewModel = new PaginatedList<MovieListItemDto>(moviesResult.Entity.Items, moviesResult.Entity.TotalAmount, moviesResult.Entity.Page.Number, pageSize);
-            return View(viewModel);
+        public async Task<IActionResult> LoadTable([FromBody] DataTablesParameters param) {
+            var result = await _movieService.GetAsync(param);
+            if (result.IsSuccess) {
+                return new JsonResult(new DataTablesResult<MovieListItemDto> {
+                    Draw = param.Draw,
+                    Data = result.Entity.Items,
+                    RecordsFiltered = result.Entity.TotalSize,
+                    RecordsTotal = result.Entity.TotalSize
+                });
+            }
+            return new JsonResult(new { error = "Internal Server Error" });
         }
 
         public async Task<IActionResult> Details(Guid id) {
@@ -40,8 +50,8 @@ namespace MovieLand.Controllers
                 return View(movieResult.Entity);
         }
 
-// GET: Movie/Create
-public IActionResult Create() {
+        // GET: Movie/Create
+        public IActionResult Create() {
             return View();
         }
 
