@@ -116,8 +116,10 @@ namespace MovieLand.BLL.Services
                 // Limit
                 queryBuilder.SetLimit(table.Length);
 
-                // Offset
-                queryBuilder.SetOffset((table.Start / table.Length) * table.Length);
+                if (table.Length > 0) {
+                    // Offset
+                    queryBuilder.SetOffset((table.Start / table.Length) * table.Length);
+                }
                 /// End Query building
 
                 // Get countries

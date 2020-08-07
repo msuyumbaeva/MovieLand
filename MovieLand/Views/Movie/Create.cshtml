@@ -79,57 +79,5 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     @{await Html.RenderPartialAsync("_ChoicesScriptsPartial");}
-
-    <script>   
-
-        // Send request to get artists
-        const getArtists = async () => {
-            try {
-                const countriesResult = await fetch('/Api/ArtistApi/');
-                const newCountries = formatArrayForChoices(await countriesResult.json())
-                return newCountries;
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        $(document).ready(async function () {
-            var genreChoices = new Choices('#genresSelectList', { removeItemButton: true });
-            var countryChoices = new Choices('#countriesSelectList', { removeItemButton: true });
-            var directorChoices = new Choices('#directorsSelectList', { removeItemButton: true });
-            var actorChoices = new Choices('#actorsSelectList', { removeItemButton: true });
-
-            // Passing a function that returns Promise of choices
-            genreChoices.setChoices(async () => {
-                try {
-                    const genresResult = await fetch('/Api/GenreApi/');
-                    const newGenres = formatArrayForChoices(await genresResult.json())
-                    return newGenres;
-                } catch (err) {
-                    console.error(err);
-                }
-            });
-
-            // Passing a function that returns Promise of choices
-            countryChoices.setChoices(async () => {
-                try {
-                    const countriesResult = await fetch('/Api/CountryApi/');
-                    const newCountries = formatArrayForChoices(await countriesResult.json())
-                    return newCountries;
-                } catch (err) {
-                    console.error(err);
-                }
-            });
-
-            // Get artists list
-            const artists = await getArtists()
-
-            // Set artists to directors select list
-            directorChoices.setChoices(artists);
-
-            // Set artists to actors select list
-            actorChoices.setChoices(artists);
-        })
-
-    </script>
+    <script src="~/js/movie/create.js"></script>
 }
