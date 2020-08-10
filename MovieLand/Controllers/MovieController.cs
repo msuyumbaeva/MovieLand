@@ -72,11 +72,13 @@ namespace MovieLand.Controllers
                 // If created successfully
                 if (movieResult.IsSuccess) {
                     var movieId = movieResult.Entity.Id;
-                    // Set genres of movie
-                    await _movieService.SetGenresAsync(movieId, movieViewModel.Genres);
+                    // Add genres of movie
+                    foreach (var genre in movieViewModel.Genres)
+                        await _movieService.AddGenreAsync(movieId, genre);
 
-                    // Set countries of movie
-                    await _movieService.SetCountriesAsync(movieId, movieViewModel.Countries);
+                    // Add countries of movie
+                    foreach (var country in movieViewModel.Countries)
+                        await _movieService.AddCountryAsync(movieId, country);
 
                     // Add movie artists
                     foreach (var artists in movieViewModel.Artists) {

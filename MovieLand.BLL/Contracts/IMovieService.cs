@@ -17,11 +17,9 @@ namespace MovieLand.BLL.Contracts
     {
         Task<OperationDetails<MovieDto>> SaveAsync(MovieCreateDto movieDto);
 
-        Task<OperationDetails<bool>> SetGenresAsync(Guid movieId, ICollection<Guid> genres);
         Task<OperationDetails<bool>> AddGenreAsync(Guid movieId, Guid genreId);
         Task<OperationDetails<bool>> RemoveGenreAsync(Guid movieId, Guid genreId);
 
-        Task<OperationDetails<bool>> SetCountriesAsync(Guid movieId, ICollection<Guid> countries);
         Task<OperationDetails<bool>> AddCountryAsync(Guid movieId, Guid countryId);
         Task<OperationDetails<bool>> RemoveCountryAsync(Guid movieId, Guid countryId);
 
