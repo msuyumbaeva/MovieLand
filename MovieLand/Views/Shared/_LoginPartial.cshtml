@@ -1,18 +1,25 @@
-﻿@using System.Security.Claims;
-<ul class="navbar-nav ml-auto">
-    @if (User.Identity.IsAuthenticated)
-    {
-        <li class="nav-item text-dark">
-            <a class="nav-link text-dark">@User.Identity.Name</a>
-        </li>
-        <li class="nav-item">
-            <form class="form-inline" asp-controller="Account" asp-action="Logout">
-                <button type="submit" class="nav-link btn btn-link text-dark">Log out</button>
-            </form>
+﻿<ul class="navbar-nav ml-auto">
+    @if (User.Identity.IsAuthenticated) {
+        <li class="nav-item text-dark dropdown">
+            <a class="nav-link text-dark dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @User.Identity.Name
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                @if (User.IsInRole("ADMIN")) {
+                    <a class="dropdown-item" asp-action="Index" asp-controller="Genre">Genres</a>
+                    <a class="dropdown-item" asp-action="Index" asp-controller="Country">Countries</a>
+                    <a class="dropdown-item" asp-action="Index" asp-controller="Artist">Artists</a>
+                    <div class="dropdown-divider"></div>
+                }
+                    <div class="dropdown-item" href="#">
+                        <form class="form-inline" asp-controller="Account" asp-action="Logout">
+                            <button type="submit" class="p-0 nav-link btn btn-link text-dark">Log out</button>
+                        </form>
+                    </div>
+            </div>
         </li>
     }
-    else
-    {
+    else {
         <li class="nav-item">
             <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Log in</a>
         </li>

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos;
@@ -55,6 +56,7 @@ namespace MovieLand.Controllers
         }
 
         // GET: Movie/Create
+        [Authorize(Roles = "ADMIN")]
         public IActionResult Create() {
             return View();
         }
@@ -62,6 +64,7 @@ namespace MovieLand.Controllers
         // POST: Movie/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Create(MovieCreateViewModel movieViewModel) {
             // Check if model is valid
             if (ModelState.IsValid) {
@@ -98,6 +101,7 @@ namespace MovieLand.Controllers
             return View(movieViewModel);
         }
 
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> Edit(Guid id) {
             var result = await _movieService.GetByIdAsync(id);
             if (!result.IsSuccess)
@@ -109,6 +113,7 @@ namespace MovieLand.Controllers
             return View(dto);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpPost]
         public async Task<IActionResult> Edit(MovieCreateViewModel movieViewModel) {
             if (ModelState.IsValid) {
@@ -160,6 +165,7 @@ namespace MovieLand.Controllers
             return result.Entity;
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete]
         public async Task<JsonResult> DeleteGenre(Guid movieId, Guid genreId) {
             var result = await _movieService.RemoveGenreAsync(movieId, genreId);
@@ -168,6 +174,7 @@ namespace MovieLand.Controllers
             return Json(result);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete]
         public async Task<JsonResult> DeleteCountry(Guid movieId, Guid countryId) {
             var result = await _movieService.RemoveCountryAsync(movieId, countryId);
@@ -176,6 +183,7 @@ namespace MovieLand.Controllers
             return Json(result);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete]
         public async Task<JsonResult> DeleteArtist(Guid movieId, Guid artistId, CareerEnum career) {
             var result = await _movieService.RemoveArtistAsync(movieId, new MovieArtistDto(artistId, career, 0));

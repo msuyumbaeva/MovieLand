@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Artist;
 using MovieLand.BLL.Dtos.DataTables;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace MovieLand.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class ArtistController : ControllerBase
     {
         private readonly IArtistService _artistService;

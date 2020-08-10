@@ -1,19 +1,21 @@
 ﻿@{
     ViewData["Title"] = "Index";
+    var IsAdmin = User.IsInRole("ADMIN");
 }
 
 <h1>Movie</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+@if (IsAdmin) {
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+}
 
 <table id="data-table" class="table table-sm">
     <thead>
         <tr>
             <th>Name</th>
             <th>ReleaseYear</th>
-            <th></th>
         </tr>
     </thead>
 </table>

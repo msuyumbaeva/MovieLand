@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Details";
     var coma = ", ";
+    var IsAdmin = User.IsInRole("ADMIN");
 }
 
 <div class="mt-5">
@@ -88,6 +89,8 @@
     
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @if (IsAdmin) {
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) <span>|</span>
+    }
     <a asp-action="Index">Back to List</a>
 </div>

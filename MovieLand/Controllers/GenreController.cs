@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.DataTables;
@@ -8,6 +9,7 @@ using MovieLand.Models;
 
 namespace MovieLand.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class GenreController : ControllerBase
     {
         private readonly IGenreService _genreService;

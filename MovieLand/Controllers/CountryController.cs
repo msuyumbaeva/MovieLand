@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.DataTables;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MovieLand.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class CountryController : ControllerBase
     {
         private readonly ICountryService _countryService;
