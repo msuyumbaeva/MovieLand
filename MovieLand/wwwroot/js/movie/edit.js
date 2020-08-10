@@ -33,4 +33,42 @@
     actorChoices.handleRemoveItem()
     actorChoices.initChoices(`${Urls.Movie.GetArtists}?id=${movieId}&career=Actor`)
 
+    // Delete items on button click
+    $('#movie-edit-btn').on('click', function () {
+        // Delete genres
+        genreChoices.removes.forEach(g => {
+            deleteData(`${Urls.Movie.DeleteGenre}?movieId=${movieId}&genreId=${g}`)
+        })
+
+        // Delete countries
+        countryChoices.removes.forEach(c => {
+            deleteData(`${Urls.Movie.DeleteCountry}?movieId=${movieId}&countryId=${c}`)
+        })
+
+        // Delete directors
+        directorChoices.removes.forEach(d => {
+            deleteData(`${Urls.Movie.DeleteArtist}?movieId=${movieId}&artistId=${d}&career=Director`)
+        })
+
+        // Delete actors
+        actorChoices.removes.forEach(a => {
+            deleteData(`${Urls.Movie.DeleteArtist}?movieId=${movieId}&artistId=${a}&career=Actor`)
+        })
+        $('#movie-edit-form').submit()
+    })
+
 })
+
+async function deleteData(deleteUrl) {
+    try {
+        await $.ajax({
+            type: "DELETE",
+            url: deleteUrl,
+            contentType: 'application/json; charset=utf-8',
+            cache: false,
+            timeout: 600000
+        });
+    } catch (err) {
+        console.error(err);
+    }
+}

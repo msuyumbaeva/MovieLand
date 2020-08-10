@@ -9,6 +9,8 @@ namespace MovieLand.BLL.Dtos.Movie
 {
     public class MovieCreateDto
     {
+        public Guid Id { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; }
@@ -31,7 +33,6 @@ namespace MovieLand.BLL.Dtos.Movie
         [StringLength(500)]
         public string Description { get; set; }
 
-        [Required]
         [FileExtension(Extensions = ".png,.jpg,.jpeg")]
         [FileSize(1024 * 1024)]
         public IFormFile Poster { get; set; }

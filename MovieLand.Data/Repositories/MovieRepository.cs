@@ -50,7 +50,7 @@ namespace MovieLand.Data.Repositories
             return DbSet.FindAsync(id);
         }
 
-        public async Task<MovieArtist> GetByMovieAndArtistAndCareer(Guid movieId, Guid artistId, CareerEnum career) {
+        public async Task<MovieArtist> GetByMovieAndArtistAndCareerAsync(Guid movieId, Guid artistId, CareerEnum career) {
             return await _context.MovieArtists
                 .Where(m => m.MovieId == movieId && m.ArtistId == artistId && m.CareerId == career)
                 .FirstOrDefaultAsync();
@@ -96,6 +96,18 @@ namespace MovieLand.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<bool> IsInCountryAsync(Guid movieId, Guid countryId) {
+            return (await _context.MovieContries
+                .Where(m => m.MovieId == movieId && m.CountryId == countryId)
+                .CountAsync()) > 0;
+        }
+
+        public async Task<bool> IsInGenreAsync(Guid movieId, Guid genreId) {
+            return (await _context.MovieGenres
+                .Where(m => m.MovieId == movieId && m.GenreId == genreId)
+                .CountAsync()) > 0;
+        }
+
         public void RemoveFromArtistAndCareer(MovieArtist movieArtist) {
             _context.MovieArtists.Remove(movieArtist);
         }
@@ -106,6 +118,10 @@ namespace MovieLand.Data.Repositories
 
         public void RemoveFromGenre(MovieGenre movieGenre) {
             _context.MovieGenres.Remove(movieGenre);
+        }
+
+        public void UpdateArtist(MovieArtist movieArtist) {
+            _context.MovieArtists.Update(movieArtist);
         }
     }
 }

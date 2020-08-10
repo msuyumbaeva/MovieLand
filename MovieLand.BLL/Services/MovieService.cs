@@ -33,6 +33,7 @@ namespace MovieLand.BLL.Services
     {
         private readonly MoviePosterFileConfiguration _fileConfiguration;
         private readonly IFileClient _fileClient;
+        private readonly static string NO_MOVIE_POSTER_FILE_NAME = "no-movie-poster.svg";
 
         public MovieService(IMapper mapper, IUnitOfWork unitOfWork, IOptions<MoviePosterFileConfiguration> fileConfiguration, IFileClient fileClient) :  base(mapper, unitOfWork){
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
@@ -67,16 +68,36 @@ namespace MovieLand.BLL.Services
         #endregion Private methods
 
         #region Interface implementations
-        // Create movie
-        public async Task<OperationDetails<MovieDto>> CreateAsync(MovieCreateDto movieCreateDto) {
+        // Create or Edit movie
+        public async Task<OperationDetails<MovieDto>> SaveAsync(MovieCreateDto movieCreateDto) {
             try {
-                // Save poster
-                var posterFileName = await SavePoster(movieCreateDto.Poster);
+                var posterFileName = NO_MOVIE_POSTER_FILE_NAME;
+                if (movieCreateDto.Poster != null) {
+                    // Save poster
+                    posterFileName = await SavePoster(movieCreateDto.Poster);
+                }
 
-                // Save movie to db
-                var movie = _mapper.Map<Movie>(movieCreateDto);
-                movie.Poster = posterFileName;
-                movie = await _unitOfWork.Movies.AddAsync(movie);
+                Movie movie = null;
+                // Check if id is empty
+                if (movieCreateDto.Id == Guid.Empty) {
+                    // Create new movie
+                    movie = _mapper.Map<Movie>(movieCreateDto);
+                    movie.Poster = posterFileName;
+                    movie = await _unitOfWork.Movies.AddAsync(movie);
+                }
+                else {
+                    // Update existing movie
+                    movie = await _unitOfWork.Movies.GetByIdAsync(movieCreateDto.Id);
+                    if (movie == null)
+                        throw new Exception($"Movie with Id {movieCreateDto.Id} was not found");
+
+                    var moviePoster = movie.Poster;
+                    movie = _mapper.Map(movieCreateDto, movie);
+
+                    movie.Poster = movieCreateDto.Poster == null ? moviePoster : posterFileName;
+                    _unitOfWork.Movies.Update(movie);
+                }
+
                 await _unitOfWork.CompleteAsync();
 
                 // Map dto
@@ -89,7 +110,7 @@ namespace MovieLand.BLL.Services
         }
 
         // Add genres to movie
-        public async Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres) {
+        public async Task<OperationDetails<bool>> SetGenresAsync(Guid movieId, ICollection<Guid> genres) {
             try {
                 // Find movie by id
                 var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
@@ -124,7 +145,7 @@ namespace MovieLand.BLL.Services
         }
 
         // Add countries to movie
-        public async Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries) {
+        public async Task<OperationDetails<bool>> SetCountriesAsync(Guid movieId, ICollection<Guid> countries) {
             try {
                 // Find movie by id
                 var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
@@ -214,7 +235,8 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        public async Task<OperationDetails<MovieDto>> GetById(Guid id) {
+        // Get movie by Id
+        public async Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id) {
             try {
                 var movie = await _unitOfWork.Movies.GetByIdAsync(id);
                 if (movie == null)
@@ -241,41 +263,8 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        public async Task<OperationDetails<bool>> AddArtist(Guid movieId, MovieArtistDto artist) {
-            try {
-                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
-                if (movie == null)
-                    throw new Exception($"Movie with Id {movieId} was not found");
-
-                var movieArtist = _mapper.Map<MovieArtist>(artist);
-                movieArtist.MovieId = movieId;
-
-                await _unitOfWork.Movies.AddToArtistAndCareerAsync(movieArtist);
-                await _unitOfWork.CompleteAsync();
-                return OperationDetails<bool>.Success(true);
-            }
-            catch (Exception ex) {
-                return OperationDetails<bool>.Failure().AddError(ex.Message);
-            }
-        }
-
-        public async Task<OperationDetails<bool>> RemoveArtist(Guid movieId, MovieArtistDto artist) {
-            try {
-                var movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareer(movieId, artist.ArtistId, artist.CareerId);
-
-                if(movieArtist == null)
-                    throw new Exception($"Artist {artist.ArtistId} as {artist.CareerId.ToString()} in movie {movieId} was not found");
-
-                _unitOfWork.Movies.RemoveFromArtistAndCareer(movieArtist);
-                await _unitOfWork.CompleteAsync();
-                return OperationDetails<bool>.Success(true);
-            }
-            catch (Exception ex) {
-                return OperationDetails<bool>.Failure().AddError(ex.Message);
-            }
-        }
-
-        public async Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovie(Guid movieId) {
+        // Get genres of movie
+        public async Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovieAsync(Guid movieId) {
             try {
                 var genres = await _unitOfWork.Movies.GetGenresByMovieAsync(movieId);
                 var dto = _mapper.Map<List<GenreDto>>(genres);
@@ -286,7 +275,8 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        public async Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovie(Guid movieId) {
+        // Get countries of movie
+        public async Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovieAsync(Guid movieId) {
             try {
                 var countries = await _unitOfWork.Movies.GetCountriesByMovieAsync(movieId);
                 var dto = _mapper.Map<List<CountryDto>>(countries);
@@ -297,7 +287,8 @@ namespace MovieLand.BLL.Services
             }
         }
 
-        public async Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovie(Guid movieId, CareerEnum career) {
+        // Get artists of movie
+        public async Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovieAsync(Guid movieId, CareerEnum career) {
             try {
                 var artists = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(movieId, career);
                 var dto = _mapper.Map<List<ArtistDto>>(artists);
@@ -305,6 +296,115 @@ namespace MovieLand.BLL.Services
             }
             catch (Exception ex) {
                 return OperationDetails<IEnumerable<ArtistDto>>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Add genre to movie
+        public async Task<OperationDetails<bool>> AddGenreAsync(Guid movieId, Guid genreId) {
+            try {
+                var isExists = await _unitOfWork.Movies.IsInGenreAsync(movieId, genreId);
+                if(!isExists) {
+                    await _unitOfWork.Movies.AddToGenreAsync(new MovieGenre() { MovieId = movieId, GenreId = genreId });
+                }
+                await _unitOfWork.CompleteAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch(Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Remove genre from movie
+        public async Task<OperationDetails<bool>> RemoveGenreAsync(Guid movieId, Guid genreId) {
+            try {
+                var isExists = await _unitOfWork.Movies.IsInGenreAsync(movieId, genreId);
+                if (isExists) {
+                    _unitOfWork.Movies.RemoveFromGenre(new MovieGenre() { MovieId = movieId, GenreId = genreId });
+                    await _unitOfWork.CompleteAsync();
+                }
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Add country of movie
+        public async Task<OperationDetails<bool>> AddCountryAsync(Guid movieId, Guid countryId) {
+            try {
+                var isExists = await _unitOfWork.Movies.IsInCountryAsync(movieId, countryId);
+                if (!isExists) {
+                    await _unitOfWork.Movies.AddToCountryAsync(new MovieCountry() { MovieId = movieId, CountryId = countryId });
+                }
+                await _unitOfWork.CompleteAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Remove country from movie
+        public async Task<OperationDetails<bool>> RemoveCountryAsync(Guid movieId, Guid countryId) {
+            try {
+                var isExists = await _unitOfWork.Movies.IsInCountryAsync(movieId, countryId);
+                if (isExists) {
+                    _unitOfWork.Movies.RemoveFromCountry(new MovieCountry() { MovieId = movieId, CountryId = countryId });
+                    await _unitOfWork.CompleteAsync();
+                }
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Add artist to movie
+        public async Task<OperationDetails<bool>> SaveArtistAsync(Guid movieId, MovieArtistDto artist) {
+            try {
+                // Find movie
+                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
+                if (movie == null)
+                    throw new Exception($"Movie with Id {movieId} was not found");
+
+                // Find movie artist
+                MovieArtist movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareerAsync(movieId, artist.ArtistId, artist.CareerId);
+                // If not exists
+                if (movieArtist == null) {
+                    // Create new movie artist
+                    movieArtist = _mapper.Map<MovieArtist>(artist);
+                    movieArtist.MovieId = movieId;
+                    await _unitOfWork.Movies.AddToArtistAndCareerAsync(movieArtist);
+                }
+                else {
+                    // Update existing movie artist
+                    movieArtist = _mapper.Map(artist, movieArtist);
+                    _unitOfWork.Movies.UpdateArtist(movieArtist);
+                }
+
+                // Save changes
+                await _unitOfWork.CompleteAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
+            }
+        }
+
+        // Remove artist from movie
+        public async Task<OperationDetails<bool>> RemoveArtistAsync(Guid movieId, MovieArtistDto artist) {
+            try {
+                var movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareerAsync(movieId, artist.ArtistId, artist.CareerId);
+
+                if (movieArtist == null)
+                    throw new Exception($"Artist {artist.ArtistId} as {artist.CareerId.ToString()} in movie {movieId} was not found");
+
+                _unitOfWork.Movies.RemoveFromArtistAndCareer(movieArtist);
+                await _unitOfWork.CompleteAsync();
+                return OperationDetails<bool>.Success(true);
+            }
+            catch (Exception ex) {
+                return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
         }
 

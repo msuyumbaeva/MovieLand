@@ -13,6 +13,7 @@ using MovieLand.ViewModels.Movie;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace MovieLand.Controllers
@@ -46,7 +47,7 @@ namespace MovieLand.Controllers
         }
 
         public async Task<IActionResult> Details(Guid id) {
-            var movieResult = await _movieService.GetById(id);
+            var movieResult = await _movieService.GetByIdAsync(id);
             if (movieResult.Entity == null)
                 return NotFound();
             else
@@ -67,22 +68,22 @@ namespace MovieLand.Controllers
                 // Map to dto
                 var movieCreateDto = _mapper.Map<MovieCreateDto>(movieViewModel);
                 // Create movie
-                var movieResult = await _movieService.CreateAsync(movieCreateDto);
+                var movieResult = await _movieService.SaveAsync(movieCreateDto);
                 // If created successfully
                 if (movieResult.IsSuccess) {
                     var movieId = movieResult.Entity.Id;
                     // Set genres of movie
-                    await _movieService.SetGenres(movieId, movieViewModel.Genres);
+                    await _movieService.SetGenresAsync(movieId, movieViewModel.Genres);
 
                     // Set countries of movie
-                    await _movieService.SetCountries(movieId, movieViewModel.Countries);
+                    await _movieService.SetCountriesAsync(movieId, movieViewModel.Countries);
 
                     // Add movie artists
                     foreach (var artists in movieViewModel.Artists) {
                         var career = (CareerEnum)Enum.Parse(typeof(CareerEnum), artists.Name, true);
                         for (int j = 0; j < artists.Items.Length; j++) {
                             var artistDto = new MovieArtistDto(artists.Items[j], career, (byte)(j + 1));
-                            await _movieService.AddArtist(movieId, artistDto);
+                            await _movieService.SaveArtistAsync(movieId, artistDto);
                         }
                     }
 
@@ -96,7 +97,7 @@ namespace MovieLand.Controllers
         }
 
         public async Task<IActionResult> Edit(Guid id) {
-            var result = await _movieService.GetById(id);
+            var result = await _movieService.GetByIdAsync(id);
             if (!result.IsSuccess)
                 return NotFound();
 
@@ -106,19 +107,80 @@ namespace MovieLand.Controllers
             return View(dto);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Edit(MovieCreateViewModel movieViewModel) {
+            if (ModelState.IsValid) {
+                // Map to dto
+                var movieCreateDto = _mapper.Map<MovieCreateDto>(movieViewModel);
+                // Update movie
+                var movieResult = await _movieService.SaveAsync(movieCreateDto);
+                // If updated successfully
+                if (movieResult.IsSuccess) {
+                    // Add genres of movie
+                    foreach (var genre in movieViewModel.Genres)
+                        await _movieService.AddGenreAsync(movieViewModel.Id, genre);
+
+                    // Add countries of movie
+                    foreach (var country in movieViewModel.Countries)
+                        await _movieService.AddCountryAsync(movieViewModel.Id, country);
+
+                    // Add movie artists
+                    foreach (var artists in movieViewModel.Artists) {
+                        var career = (CareerEnum)Enum.Parse(typeof(CareerEnum), artists.Name, true);
+                        for (int j = 0; j < artists.Items.Length; j++) {
+                            var artistDto = new MovieArtistDto(artists.Items[j], career, (byte)(j + 1));
+                            await _movieService.SaveArtistAsync(movieViewModel.Id, artistDto);
+                        }
+                    }
+
+                    // Redirect to details action
+                    return RedirectToAction(nameof(Details), new { id = movieViewModel.Id });
+                }
+            }
+            return View(movieViewModel);
+        }
+
+        [HttpGet]
         public async Task<IEnumerable<GenreDto>> GetGenres(Guid id) {
-            var result = await _movieService.GetGenresOfMovie(id);
+            var result = await _movieService.GetGenresOfMovieAsync(id);
             return result.Entity;
         }
 
+        [HttpGet]
         public async Task<IEnumerable<CountryDto>> GetCountries(Guid id) {
-            var result = await _movieService.GetCountriesOfMovie(id);
+            var result = await _movieService.GetCountriesOfMovieAsync(id);
             return result.Entity;
         }
 
+        [HttpGet]
         public async Task<IEnumerable<ArtistDto>> GetArtists(Guid id, CareerEnum career) {
-            var result = await _movieService.GetArtistsByCareerOfMovie(id, career);
+            var result = await _movieService.GetArtistsByCareerOfMovieAsync(id, career);
             return result.Entity;
         }
+
+        [HttpDelete]
+        public async Task<JsonResult> DeleteGenre(Guid movieId, Guid genreId) {
+            var result = await _movieService.RemoveGenreAsync(movieId, genreId);
+            if (!result.IsSuccess)
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return Json(result);
+        }
+
+        [HttpDelete]
+        public async Task<JsonResult> DeleteCountry(Guid movieId, Guid countryId) {
+            var result = await _movieService.RemoveCountryAsync(movieId, countryId);
+            if (!result.IsSuccess)
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return Json(result);
+        }
+
+        [HttpDelete]
+        public async Task<JsonResult> DeleteArtist(Guid movieId, Guid artistId, CareerEnum career) {
+            var result = await _movieService.RemoveArtistAsync(movieId, new MovieArtistDto(artistId, career, 0));
+            if (!result.IsSuccess)
+                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            return Json(result);
+        }
+
     }
 }

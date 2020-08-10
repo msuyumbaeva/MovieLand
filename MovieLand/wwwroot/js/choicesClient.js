@@ -1,4 +1,4 @@
-﻿async function removeChoicesItemHandler(event, removedArray) {
+﻿async function removeChoicesItemHandler(event, removedArray ) {
     var itemValue = event.detail.value
     removedArray.push(itemValue)
 }

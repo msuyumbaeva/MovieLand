@@ -42,7 +42,6 @@ namespace MovieLand.ViewModels.Movie
         [StringLength(500)]
         public string Description { get; set; }
 
-        [Required]
         [FileExtension(Extensions = ".png,.jpg,.jpeg")]
         [FileSize(1024 * 1024)]
         public IFormFile Poster { get; set; }

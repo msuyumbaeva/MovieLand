@@ -15,15 +15,24 @@ namespace MovieLand.BLL.Contracts
 {
     public interface IMovieService
     {
-        Task<OperationDetails<MovieDto>> CreateAsync(MovieCreateDto movieDto);
-        Task<OperationDetails<bool>> SetGenres(Guid movieId, ICollection<Guid> genres);
-        Task<OperationDetails<bool>> SetCountries(Guid movieId, ICollection<Guid> countries);
+        Task<OperationDetails<MovieDto>> SaveAsync(MovieCreateDto movieDto);
+
+        Task<OperationDetails<bool>> SetGenresAsync(Guid movieId, ICollection<Guid> genres);
+        Task<OperationDetails<bool>> AddGenreAsync(Guid movieId, Guid genreId);
+        Task<OperationDetails<bool>> RemoveGenreAsync(Guid movieId, Guid genreId);
+
+        Task<OperationDetails<bool>> SetCountriesAsync(Guid movieId, ICollection<Guid> countries);
+        Task<OperationDetails<bool>> AddCountryAsync(Guid movieId, Guid countryId);
+        Task<OperationDetails<bool>> RemoveCountryAsync(Guid movieId, Guid countryId);
+
+        Task<OperationDetails<bool>> SaveArtistAsync(Guid movieId, MovieArtistDto artist);
+        Task<OperationDetails<bool>> RemoveArtistAsync(Guid movieId, MovieArtistDto artist);
+
         Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(DataTablesParameters table);
-        Task<OperationDetails<MovieDto>> GetById(Guid id);
-        Task<OperationDetails<bool>> AddArtist(Guid movieId, MovieArtistDto artist);
-        Task<OperationDetails<bool>> RemoveArtist(Guid movieId, MovieArtistDto artist);
-        Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovie(Guid movieId);
-        Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovie(Guid movieId);
-        Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovie(Guid movieId, CareerEnum career);
+        Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id);
+
+        Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovieAsync(Guid movieId);
+        Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovieAsync(Guid movieId);
+        Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovieAsync(Guid movieId, CareerEnum career);
     }
 }
