@@ -1,4 +1,30 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+﻿async function postData(url, data) {
+    try {
+        await $.ajax({
+            type: "POST",
+            url,
+            data: JSON.stringify(data),
+            contentType: 'application/json; charset=utf-8',
+            cache: false,
+            timeout: 600000
+        });
 
-// Write your JavaScript code.
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function getData(url) {
+    try {
+        const result = await $.ajax({
+            type: "GET",
+            url,
+            cache: false,
+            timeout: 600000
+        });
+        return result;
+
+    } catch (err) {
+        console.error(err);
+    }
+}

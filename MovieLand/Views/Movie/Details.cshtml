@@ -80,20 +80,19 @@
                     }
                 </dd>
             </dl>
+            <partial name="_StarRatingPartial" />
         </div>
-        <div class="col-12">
-            <div class="my-3 font-weight-bold">Overview</div>
-            <div class="mb-3">
+        <div class="col-12 my-3">
+            <div class="mb-3 font-weight-bold">Overview</div>
+            <div>
                 @Html.DisplayFor(model => model.Description)
             </div>
         </div>
-        <div class="col-12">
-            <div class="my-3">
-                <partial name="../Comment/_IndexPartial.cshtml" />
-                @if (IsUser) {
-                    <partial name="../Comment/_CreatePartial.cshtml" model="newComment" />
-                }
-            </div>
+        <div class="col-12 my-3">
+            <partial name="../Comment/_IndexPartial.cshtml" />
+            @if (IsUser) {
+                <partial name="../Comment/_CreatePartial.cshtml" model="newComment" />
+            }
         </div>
     </div>
 
@@ -107,5 +106,6 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_DataTablesScriptsPartial");}
+    @{await Html.RenderPartialAsync("_RatingScriptsPartial");}
     <script src="~/js/movie/details.js"></script>
 }

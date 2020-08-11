@@ -4,6 +4,7 @@ using MovieLand.BLL.Dtos.Comment;
 using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.BLL.Dtos.StarRating;
 using MovieLand.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,7 @@ namespace MovieLand.BLL
             CountryMapping();
             ArtistMapping();
             CommentMapping();
+            StarRatingMapping();
         }
 
         private void MovieMapping() {
@@ -47,6 +49,11 @@ namespace MovieLand.BLL
         private void CommentMapping() {
             CreateMap<Comment, CommentDto>()
                 .ForMember(dest=>dest.UserName, opt=>opt.MapFrom(src=>src.User.UserName))
+                .ReverseMap();
+        }
+
+        private void StarRatingMapping() {
+            CreateMap<StarRatingDto, StarRating>()
                 .ReverseMap();
         }
     }

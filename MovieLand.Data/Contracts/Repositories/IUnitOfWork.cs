@@ -13,6 +13,7 @@ namespace MovieLand.Data.Contracts.Repositories
         IArtistRepository Artists { get; }
         IMovieRepository Movies { get; }
         ICommentRepository Comments { get; }
+        IStarRatingRepository StarRatings { get; }
 
         Task<int> CompleteAsync();
         void BeginTransaction();

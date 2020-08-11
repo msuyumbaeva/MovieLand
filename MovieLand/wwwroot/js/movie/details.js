@@ -1,6 +1,8 @@
-﻿$(document).ready(function () {
+﻿$(document).ready(async function () {
+    // Get movie id from url
     const movieId = window.location.pathname.split('/').pop()
 
+    // Setup datatable plugin for movie comments
     var table = $('#comments-table').DataTable({
         // Language Setups
         language: {
@@ -46,37 +48,76 @@
         responsive: true
     });
 
+    // Load avg rate of movie
+    let ratingValue = await loadRatingAverage(movieId)
+
+    let isUserAuthenticated = false
+
+    // Get user rate
+    const userRating = await getData(`${Urls.StarRating.GetByUserAndMovie}?movieId=${movieId}`)
+    if (userRating.IsSuccess) {
+        // If user rated
+        if (userRating.Entity)
+            // Show user's value
+            updateScore(userRating.Entity.Value)
+        // Update user authenticated flag
+        isUserAuthenticated = true
+    }
+
+    // Flag to prevent sending initial rating value 
+    let initialRating = ratingValue > 0
+
+    // Setup rating plugin for movie rating bar
+    $('#star-rating').rating({
+        // Value setup
+        value: ratingValue,
+        // Readonly setup
+        readonly: !isUserAuthenticated,
+        // Click handler
+        click: async function (e) {
+            // If user is authenticated
+            if (isUserAuthenticated) {
+                // If not initial value
+                if (initialRating) {
+                    initialRating = false
+                    return
+                }
+                // Get value
+                const value = e.stars;
+                // Post request
+                await postData(Urls.StarRating.Create, { movieId, value })
+                // Reload avg rate
+                await loadRatingAverage(movieId)
+                // Show user's value
+                updateScore(value)
+            }
+        }
+    });
+
+    // #comment-create-btn click handler
+    // Creates new comment, reloads form and comments table
     $('#comment-create-btn').on('click', async function () {
         const commentText = $('#comment-create-form').find('textarea[name=Text]').val()
         if (!commentText || commentText.length < 1)
             alert('Enter the comment text')
         else {
-            await createComment(movieId, commentText)
-
+            await postData(Urls.Comment.Create, { movieId, text: commentText })
+            // Reset form
             $('#comment-create-form').trigger('reset')
+            // Reload comments table
             table.ajax.reload()
         }
-    })
-
+    })      
 })
 
-async function createComment(movieId, text) {
-    try {
-        const data = {
-            movieId,
-            text
-        }
-
-        await $.ajax({
-            type: "POST",
-            url: Urls.Comment.Create,
-            data: JSON.stringify(data),
-            contentType: 'application/json; charset=utf-8',
-            cache: false,
-            timeout: 600000
-        });
-        
-    } catch (err) {
-        console.error(err);
-    }
+async function loadRatingAverage(movieId) {
+    const rating = await getData(`${Urls.StarRating.GetAverageRateOfMovie}/${movieId}`)
+    $('#star-rating-average').html(rating.Entity)
+    return rating.Entity
 }
+
+function updateScore (score) {
+    $('#star-rating-user-value').html(`Your score is ${score}`)
+}
+
+

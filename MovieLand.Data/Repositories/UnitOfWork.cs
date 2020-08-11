@@ -16,6 +16,7 @@ namespace MovieLand.Data.Repositories
         private IArtistRepository _artistRepository;
         private IMovieRepository _movieRepository;
         private ICommentRepository _commentRepository;
+        private IStarRatingRepository _starRatingRepository;
 
         private IDbContextTransaction _transaction;
 
@@ -41,6 +42,10 @@ namespace MovieLand.Data.Repositories
 
         public ICommentRepository Comments {
             get { return _commentRepository ?? (_commentRepository = new CommentRepository(_context)); }
+        }
+
+        public IStarRatingRepository StarRatings {
+            get { return _starRatingRepository ?? (_starRatingRepository = new StarRatingRepository(_context)); }
         }
 
         public Task<int> CompleteAsync() {

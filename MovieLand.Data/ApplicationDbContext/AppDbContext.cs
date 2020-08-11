@@ -23,6 +23,7 @@ namespace MovieLand.Data.ApplicationDbContext
         public DbSet<Artist> Artists { get; set; }
         public DbSet<MovieArtist> MovieArtists { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<StarRating> StarRatings { get; set; }
         #endregion DbSets
 
         #region Overrides
@@ -33,9 +34,13 @@ namespace MovieLand.Data.ApplicationDbContext
             modelBuilder.Entity<MovieGenre>().HasKey(sc => new { sc.MovieId, sc.GenreId });
             modelBuilder.Entity<MovieCountry>().HasKey(sc => new { sc.MovieId, sc.CountryId });
             modelBuilder.Entity<MovieArtist>().HasKey(sc => new { sc.MovieId, sc.ArtistId, sc.CareerId });
+            modelBuilder.Entity<StarRating>().HasKey(sc => new { sc.MovieId, sc.UserId });
 
             //Set default value
             modelBuilder.Entity<Comment>()
+                .Property(b => b.CreatedAt)
+                .HasDefaultValueSql("getdate()");
+            modelBuilder.Entity<StarRating>()
                 .Property(b => b.CreatedAt)
                 .HasDefaultValueSql("getdate()");
 
