@@ -4,6 +4,8 @@
     ViewData["Title"] = "Details";
     var coma = ", ";
     var IsAdmin = User.IsInRole("ADMIN");
+    var IsUser = User.IsInRole("USER");
+    var newComment = new MovieLand.ViewModels.Comment.CommentCreateViewModel() { MovieId = Model.Id };
 }
 
 <div class="mt-5">
@@ -79,14 +81,22 @@
                 </dd>
             </dl>
         </div>
-        <div class="col">
+        <div class="col-12">
             <div class="my-3 font-weight-bold">Overview</div>
             <div class="mb-3">
                 @Html.DisplayFor(model => model.Description)
             </div>
         </div>
+        <div class="col-12">
+            <div class="my-3">
+                <partial name="../Comment/_IndexPartial.cshtml" />
+                @if (IsUser) {
+                    <partial name="../Comment/_CreatePartial.cshtml" model="newComment" />
+                }
+            </div>
+        </div>
     </div>
-    
+
 </div>
 <div>
     @if (IsAdmin) {
@@ -94,3 +104,8 @@
     }
     <a asp-action="Index">Back to List</a>
 </div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_DataTablesScriptsPartial");}
+    <script src="~/js/movie/details.js"></script>
+}

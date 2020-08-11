@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MovieLand.BLL.Dtos.Artist;
+using MovieLand.BLL.Dtos.Comment;
 using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
@@ -17,6 +18,7 @@ namespace MovieLand.BLL
             GenreMapping();
             CountryMapping();
             ArtistMapping();
+            CommentMapping();
         }
 
         private void MovieMapping() {
@@ -39,6 +41,12 @@ namespace MovieLand.BLL
 
         private void ArtistMapping() {
             CreateMap<Artist, ArtistDto>()
+                .ReverseMap();
+        }
+
+        private void CommentMapping() {
+            CreateMap<Comment, CommentDto>()
+                .ForMember(dest=>dest.UserName, opt=>opt.MapFrom(src=>src.User.UserName))
                 .ReverseMap();
         }
     }

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using MovieLand.BLL.Dtos.Comment;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.BLL.Dtos.User;
 using MovieLand.ViewModels.Account;
+using MovieLand.ViewModels.Comment;
 using MovieLand.ViewModels.Movie;
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ namespace MovieLand.Models
         public MappingProfile() {
             MovieMapping();
             UserMapping();
+            CommentMapping();
         }
 
         private void MovieMapping() {
@@ -28,6 +31,10 @@ namespace MovieLand.Models
 
         private void UserMapping() {
             CreateMap<RegisterViewModel, UserDto>();
+        }
+
+        private void CommentMapping() {
+            CreateMap<CommentCreateViewModel, CommentDto>();
         }
     }
 }

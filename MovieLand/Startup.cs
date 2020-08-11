@@ -76,6 +76,7 @@ namespace MovieLand
             services.AddTransient<ICountryService, CountryService>();
             services.AddTransient<IMovieService, MovieService>();
             services.AddTransient<IArtistService, ArtistService>();
+            services.AddTransient<ICommentService, CommentService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

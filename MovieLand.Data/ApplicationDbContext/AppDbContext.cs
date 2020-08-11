@@ -22,6 +22,7 @@ namespace MovieLand.Data.ApplicationDbContext
         public DbSet<Career> Careers { get; set; }
         public DbSet<Artist> Artists { get; set; }
         public DbSet<MovieArtist> MovieArtists { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         #endregion DbSets
 
         #region Overrides
@@ -32,6 +33,11 @@ namespace MovieLand.Data.ApplicationDbContext
             modelBuilder.Entity<MovieGenre>().HasKey(sc => new { sc.MovieId, sc.GenreId });
             modelBuilder.Entity<MovieCountry>().HasKey(sc => new { sc.MovieId, sc.CountryId });
             modelBuilder.Entity<MovieArtist>().HasKey(sc => new { sc.MovieId, sc.ArtistId, sc.CareerId });
+
+            //Set default value
+            modelBuilder.Entity<Comment>()
+                .Property(b => b.CreatedAt)
+                .HasDefaultValueSql("getdate()");
 
             modelBuilder.SeedEnumValues<Career, CareerEnum>(e => new Career(e));
         }
