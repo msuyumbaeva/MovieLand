@@ -28,6 +28,11 @@ namespace MovieLand.BLL.Services
                 if (user == null)
                     throw new Exception($"User {ratingDto.UserName} was not found");
 
+                // Find movie
+                var movie = await _unitOfWork.Movies.GetByIdAsync(ratingDto.MovieId);
+                if (movie == null)
+                    throw new Exception($"Movie with id {ratingDto.MovieId} was not found");
+
                 // Map dto to entity
                 var rating = _mapper.Map<StarRating>(ratingDto);
                 rating.UserId = user.Id;
@@ -39,6 +44,7 @@ namespace MovieLand.BLL.Services
 
                 // Get rating
                 var dbRating = await _unitOfWork.StarRatings.GetAsync(queryBuilder);
+                // If exists
                 if (dbRating.Count() > 0) {
                     // Update existing rating
                     _unitOfWork.StarRatings.Update(rating);
@@ -47,6 +53,17 @@ namespace MovieLand.BLL.Services
                     // Create new rating
                     await _unitOfWork.StarRatings.AddAsync(rating);
                 }
+                // Save changes
+                await _unitOfWork.CompleteAsync();
+
+                // Get new average rating of movie
+                var avg = await _unitOfWork.StarRatings.GetAverageByMovieAsync(ratingDto.MovieId);
+
+                // Update average rating of movie
+                movie.AvgRating = avg;
+                _unitOfWork.Movies.Update(movie);
+
+                // Save changes
                 await _unitOfWork.CompleteAsync();
                 return OperationDetails<bool>.Success(true);
             }
@@ -58,34 +75,13 @@ namespace MovieLand.BLL.Services
         // Get average rating of movie
         public async Task<OperationDetails<double>> GetAverageRatingOfMovieAsync(Guid movieId) {
             try {
-                var avg = await _unitOfWork.StarRatings.GetAverageByMovieAsync(movieId);
-                return OperationDetails<double>.Success(avg);
-            }
-            catch(Exception ex) {
-                return OperationDetails<double>.Failure().AddError(ex.Message);
-            }
-        }
-
-        // Get rating of movie by user
-        public async Task<OperationDetails<StarRatingDto>> GetByUserAndMovieAsync(string userName, Guid movieId) {
-            try {
-                // Find user
-                var user = await _userManager.FindByNameAsync(userName);
-                if (user == null)
-                    throw new Exception($"User {userName} was not found");
-
-                // Filter by user id and movie id
-                var queryBuilder = new EntityQueryBuilder<StarRating>();
-                queryBuilder.SetFilter(s=>s.UserId == user.Id && s.MovieId == movieId);
-
-                // Get rating
-                var rating = await _unitOfWork.StarRatings.GetAsync(queryBuilder);
-                // Map to dto
-                var dto = _mapper.Map<StarRatingDto>(rating.FirstOrDefault());
-                return OperationDetails<StarRatingDto>.Success(dto);
+                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
+                if (movie == null)
+                    throw new Exception($"Movie with id {movieId} was not found");
+                return OperationDetails<double>.Success(movie.AvgRating);
             }
             catch (Exception ex) {
-                return OperationDetails<StarRatingDto>.Failure().AddError(ex.Message);
+                return OperationDetails<double>.Failure().AddError(ex.Message);
             }
         }
     }

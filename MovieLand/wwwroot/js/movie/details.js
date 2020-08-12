@@ -48,21 +48,8 @@
         responsive: true
     });
 
-    // Load avg rate of movie
-    let ratingValue = await loadRatingAverage(movieId)
-
-    let isUserAuthenticated = false
-
-    // Get user rate
-    const userRating = await getData(`${Urls.StarRating.GetByUserAndMovie}?movieId=${movieId}`)
-    if (userRating.IsSuccess) {
-        // If user rated
-        if (userRating.Entity)
-            // Show user's value
-            updateScore(userRating.Entity.Value)
-        // Update user authenticated flag
-        isUserAuthenticated = true
-    }
+    // Get avg rate of movie
+    let ratingValue = $('#star-rating-average').html()
 
     // Flag to prevent sending initial rating value 
     let initialRating = ratingValue > 0
@@ -71,26 +58,19 @@
     $('#star-rating').rating({
         // Value setup
         value: ratingValue,
-        // Readonly setup
-        readonly: !isUserAuthenticated,
         // Click handler
         click: async function (e) {
-            // If user is authenticated
-            if (isUserAuthenticated) {
-                // If not initial value
-                if (initialRating) {
-                    initialRating = false
-                    return
-                }
-                // Get value
-                const value = e.stars;
-                // Post request
-                await postData(Urls.StarRating.Create, { movieId, value })
-                // Reload avg rate
-                await loadRatingAverage(movieId)
-                // Show user's value
-                updateScore(value)
+            // If not initial value
+            if (initialRating) {
+                initialRating = false
+                return
             }
+            // Get value
+            const value = e.stars;
+            // Post request
+            await postData(Urls.StarRating.Create, { movieId, value })
+            // Reload avg rate
+            await loadRatingAverage(movieId)
         }
     });
 
@@ -116,8 +96,5 @@ async function loadRatingAverage(movieId) {
     return rating.Entity
 }
 
-function updateScore (score) {
-    $('#star-rating-user-value').html(`Your score is ${score}`)
-}
 
 

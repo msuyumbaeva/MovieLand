@@ -34,5 +34,7 @@ namespace MovieLand.Data.Models
         [Required]
         [StringLength(100)]
         public string Poster { get; set; }
+
+        public double AvgRating { get; set; }
     }
 }

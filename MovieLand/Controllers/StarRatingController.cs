@@ -40,19 +40,5 @@ namespace MovieLand.Controllers
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;
             return Json(result);
         }
-
-        public async Task<IActionResult> GetByUserAndMovie(Guid movieId) {
-            if (!User.Identity.IsAuthenticated)
-                return new JsonResult(new { error = "Not authenticated" });
-
-            if(!User.IsInRole("USER"))
-                return new JsonResult(new { error = "Not allowed" });
-
-            var userName = User.Identity.Name;
-            var result = await _starRatingService.GetByUserAndMovieAsync(userName, movieId);
-            if (!result.IsSuccess)
-                Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            return Json(result);
-        }
     }
 }

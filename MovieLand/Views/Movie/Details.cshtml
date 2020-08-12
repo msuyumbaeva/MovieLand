@@ -80,20 +80,30 @@
                     }
                 </dd>
             </dl>
-            <partial name="_StarRatingPartial" />
+            @*Star rating*@
+            <div class="d-inline-flex" style="font-size: 1.3rem;color: rgb(252, 215, 3);">
+                <div id="star-rating">
+                </div>
+                <span id="star-rating-average" class="ml-2 font-weight-bold">@Model.AvgRating</span>
+            </div>
+            @*End Star rating*@
         </div>
+        @*Overview*@
         <div class="col-12 my-3">
             <div class="mb-3 font-weight-bold">Overview</div>
             <div>
                 @Html.DisplayFor(model => model.Description)
             </div>
         </div>
+        @*End Overview*@
+        @*Comments*@
         <div class="col-12 my-3">
             <partial name="../Comment/_IndexPartial.cshtml" />
             @if (IsUser) {
                 <partial name="../Comment/_CreatePartial.cshtml" model="newComment" />
             }
         </div>
+        @*End Comments*@
     </div>
 
 </div>

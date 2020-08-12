@@ -43,6 +43,9 @@ namespace MovieLand.Data.ApplicationDbContext
             modelBuilder.Entity<StarRating>()
                 .Property(b => b.CreatedAt)
                 .HasDefaultValueSql("getdate()");
+            modelBuilder.Entity<Movie>()
+                .Property(b => b.AvgRating)
+                .HasDefaultValueSql("0");
 
             modelBuilder.SeedEnumValues<Career, CareerEnum>(e => new Career(e));
         }

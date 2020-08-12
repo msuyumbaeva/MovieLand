@@ -33,6 +33,8 @@ namespace MovieLand.BLL.Dtos.Movie
 
         public string Poster { get; set; }
 
+        public double AvgRating { get; set; }
+
         public ICollection<GenreDto> Genres { get; set; }
 
         public ICollection<CountryDto> Countries { get; set; }

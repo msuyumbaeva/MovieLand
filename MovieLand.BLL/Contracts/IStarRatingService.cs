@@ -10,8 +10,6 @@ namespace MovieLand.BLL.Contracts
     {
         // Get average rating of movie
         Task<OperationDetails<double>> GetAverageRatingOfMovieAsync(Guid movieId);
-        // Get rating of movie by user
-        Task<OperationDetails<StarRatingDto>> GetByUserAndMovieAsync(string userName, Guid movieId);
         // Create or Update star rating
         Task<OperationDetails<bool>> SaveAsync(StarRatingDto ratingDto);
     }
