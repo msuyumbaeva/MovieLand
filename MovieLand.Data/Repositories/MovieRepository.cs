@@ -29,6 +29,30 @@ namespace MovieLand.Data.Repositories
             return _context.MovieGenres.AddAsync(movieGenre);
         }
 
+        public async Task<int> CountMoviesByArtistAsync(Guid artistId) {
+            return await _context.MovieArtists
+                .Where(m => m.ArtistId == artistId)
+                .Select(m => m.MovieId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<int> CountMoviesByCountryAsync(Guid countryId) {
+            return await _context.MovieContries
+                .Where(m => m.CountryId == countryId)
+                .Select(m => m.MovieId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<int> CountMoviesByGenreAsync(Guid genreId) {
+            return await _context.MovieGenres
+                .Where(m => m.GenreId == genreId)
+                .Select(m => m.MovieId)
+                .Distinct()
+                .CountAsync();
+        }
+
         public async Task<IEnumerable<Artist>> GetArtistsByMovieAndCareerAsync(Guid movieId, CareerEnum career) {
             return await _context.MovieArtists
                 .Include(m => m.Artist)
@@ -72,26 +96,34 @@ namespace MovieLand.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<MovieArtist>> GetMoviesByArtistAsync(Guid artistId) {
+        public async Task<IEnumerable<Movie>> GetMoviesByArtistAsync(Guid artistId, int limit, int offset) {
             return await _context.MovieArtists
                 .Include(m => m.Movie)
                 .Where(m => m.ArtistId == artistId)
                 .OrderBy(m => m.Priority)
+                .Skip(offset)
+                .Take(limit)
+                .Select(m=>m.Movie)
+                .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Movie>> GetMoviesByCountryAsync(Guid countryId) {
+        public async Task<IEnumerable<Movie>> GetMoviesByCountryAsync(Guid countryId, int limit, int offset) {
             return await _context.MovieContries
                 .Include(m => m.Movie)
                 .Where(m => m.CountryId == countryId)
+                .Skip(offset)
+                .Take(limit)
                 .Select(m => m.Movie)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Movie>> GetMoviesByGenreAsync(Guid genreId) {
+        public async Task<IEnumerable<Movie>> GetMoviesByGenreAsync(Guid genreId, int limit, int offset) {
             return await _context.MovieGenres
                 .Include(m => m.Movie)
                 .Where(m => m.GenreId == genreId)
+                .Skip(offset)
+                .Take(limit)
                 .Select(m => m.Movie)
                 .ToListAsync();
         }

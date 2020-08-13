@@ -32,5 +32,9 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovieAsync(Guid movieId);
         Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovieAsync(Guid movieId);
         Task<OperationDetails<IEnumerable<ArtistDto>>> GetArtistsByCareerOfMovieAsync(Guid movieId, CareerEnum career);
+
+        Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByGenreAsync(Guid genreId, int length, int start);
+        Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByCountryAsync(Guid countryId, int length, int start);
+        Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByArtistAsync(Guid artistId, int length, int start);
     }
 }

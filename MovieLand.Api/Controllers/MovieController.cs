@@ -59,6 +59,54 @@ namespace MovieLand.Api.Controllers
             return StatusCode(500, "Internal server error");
         }
 
+        // GET: api/Movie/Genre/{id}
+        [HttpGet]
+        [Route("[action]/{id}")]
+        public async Task<IActionResult> Genre(Guid id, int start = 0, int length = 10) {
+            var result = await _movieService.GetByGenreAsync(id, length, start);
+            if (result.IsSuccess) {
+                return Ok(new DataTablesResult<MovieListItemDto> {
+                    Draw = 0,
+                    Data = result.Entity.Items,
+                    RecordsFiltered = result.Entity.Items.Count(),
+                    RecordsTotal = result.Entity.TotalSize
+                });
+            }
+            return StatusCode(500, "Internal server error");
+        }
+
+        // GET: api/Movie/Country/{id}
+        [HttpGet]
+        [Route("[action]/{id}")]
+        public async Task<IActionResult> Country(Guid id, int start = 0, int length = 10) {
+            var result = await _movieService.GetByCountryAsync(id, length, start);
+            if (result.IsSuccess) {
+                return Ok(new DataTablesResult<MovieListItemDto> {
+                    Draw = 0,
+                    Data = result.Entity.Items,
+                    RecordsFiltered = result.Entity.Items.Count(),
+                    RecordsTotal = result.Entity.TotalSize
+                });
+            }
+            return StatusCode(500, "Internal server error");
+        }
+
+        // GET: api/Movie/Artist/{id}
+        [HttpGet]
+        [Route("[action]/{id}")]
+        public async Task<IActionResult> Artist(Guid id, int start = 0, int length = 10) {
+            var result = await _movieService.GetByArtistAsync(id, length, start);
+            if (result.IsSuccess) {
+                return Ok(new DataTablesResult<MovieListItemDto> {
+                    Draw = 0,
+                    Data = result.Entity.Items,
+                    RecordsFiltered = result.Entity.Items.Count(),
+                    RecordsTotal = result.Entity.TotalSize
+                });
+            }
+            return StatusCode(500, "Internal server error");
+        }
+
         // GET: api/Movie/Poster/5
         [HttpGet]
         [Route("[action]/{id}")]
@@ -78,9 +126,6 @@ namespace MovieLand.Api.Controllers
         [HttpGet("{id}", Name = "Get")]
         public async Task<IActionResult> Get(Guid id) {
             var movieResult = await _movieService.GetByIdAsync(id);
-            if (!movieResult.IsSuccess)
-                return StatusCode(500, "Internal server error");
-
             if (movieResult.Entity == null)
                 return NotFound();
             else

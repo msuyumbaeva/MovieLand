@@ -148,7 +148,7 @@ namespace MovieLand.BLL.Services
                 }
                 /// End Query building
 
-                // Get genres
+                // Get movies
                 var genres = await _unitOfWork.Movies.GetAsync(queryBuilder);
                 // Map to dto
                 items = _mapper.Map<MovieListItemDto[]>(genres);
@@ -336,6 +336,63 @@ namespace MovieLand.BLL.Services
             catch (Exception ex) {
                 return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
+        }
+
+        // Get movies by genre
+        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByGenreAsync(Guid genreId, int length, int start) {
+            MovieListItemDto[] items = null;
+            // Get total size
+            var size = await _unitOfWork.Movies.CountMoviesByGenreAsync(genreId);
+
+            // Get movies
+            var movies = await _unitOfWork.Movies.GetMoviesByGenreAsync(genreId, length, start);
+            // Map to dto
+            items = _mapper.Map<MovieListItemDto[]>(movies);
+
+            // Return result
+            var result = new DataTablesPagedResults<MovieListItemDto> {
+                Items = items,
+                TotalSize = size
+            };
+            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
+        }
+
+        // Get movies by country
+        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByCountryAsync(Guid countryId, int length, int start) {
+            MovieListItemDto[] items = null;
+            // Get total size
+            var size = await _unitOfWork.Movies.CountMoviesByCountryAsync(countryId);
+
+            // Get movies
+            var movies = await _unitOfWork.Movies.GetMoviesByCountryAsync(countryId, length, start);
+            // Map to dto
+            items = _mapper.Map<MovieListItemDto[]>(movies);
+
+            // Return result
+            var result = new DataTablesPagedResults<MovieListItemDto> {
+                Items = items,
+                TotalSize = size
+            };
+            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
+        }
+
+        // Get movies by artist
+        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByArtistAsync(Guid artistId, int length, int start) {
+            MovieListItemDto[] items = null;
+            // Get total size
+            var size = await _unitOfWork.Movies.CountMoviesByArtistAsync(artistId);
+
+            // Get movies
+            var movies = await _unitOfWork.Movies.GetMoviesByArtistAsync(artistId, length, start);
+            // Map to dto
+            items = _mapper.Map<MovieListItemDto[]>(movies);
+
+            // Return result
+            var result = new DataTablesPagedResults<MovieListItemDto> {
+                Items = items,
+                TotalSize = size
+            };
+            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
         }
 
         #endregion Interface implementations
