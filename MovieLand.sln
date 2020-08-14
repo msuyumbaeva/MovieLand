@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.Data", "MovieLand
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.BLL", "MovieLand.BLL\MovieLand.BLL.csproj", "{3B23FFBC-0C4A-448E-883B-F98D92EA18BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieLand.Api", "MovieLand.Api\MovieLand.Api.csproj", "{A30A2968-A478-44A0-B011-76AE3C41B727}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.Api", "MovieLand.Api\MovieLand.Api.csproj", "{A30A2968-A478-44A0-B011-76AE3C41B727}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieLand.IdentityServer", "MovieLand.IdentityServer\MovieLand.IdentityServer.csproj", "{3416E534-4D08-4F95-86C9-D3AE28115DCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{A30A2968-A478-44A0-B011-76AE3C41B727}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A30A2968-A478-44A0-B011-76AE3C41B727}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A30A2968-A478-44A0-B011-76AE3C41B727}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,11 +15,13 @@ namespace MovieLand.IdentityServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration) {
-            Configuration = configuration;
+        public Startup(IConfiguration configuration, IHostingEnvironment environment) {
+            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            Environment = environment ?? throw new ArgumentNullException(nameof(environment));
         }
 
         public IConfiguration Configuration { get; }
+        public IHostingEnvironment Environment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -49,8 +51,12 @@ namespace MovieLand.IdentityServer
                .AddInMemoryClients(Config.GetClients())
                .AddAspNetIdentity<AppUser>();
 
-            // not recommended for production - you need to store your key material somewhere secure
-            builder.AddDeveloperSigningCredential();
+            if (Environment.IsDevelopment()) {
+                builder.AddDeveloperSigningCredential();
+            }
+            else {
+                throw new Exception("need to configure key material");
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

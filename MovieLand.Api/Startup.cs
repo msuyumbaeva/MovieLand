@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MovieLand.Api.Models;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
@@ -33,11 +26,16 @@ namespace MovieLand.Api
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
-            services.Configure<CookiePolicyOptions>(options => {
-                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
+            // Setup custom configurations
+            var moviePosterFileConfSection = Configuration.GetSection("MoviePosterFileConfiguration");
+            services.Configure<MoviePosterFileConfiguration>(moviePosterFileConfSection);
+
+            var apiConfSection = Configuration.GetSection("ApiConfiguration");
+            services.Configure<ApiConfiguration>(apiConfSection);
+
+            services.AddMvcCore()
+                .AddAuthorization()
+                .AddJsonFormatters();
 
             // Setup db connection
             var connection = Configuration.GetConnectionString("DefaultConnection");
@@ -48,6 +46,18 @@ namespace MovieLand.Api
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connection);
 
+            var apiConf = apiConfSection.Get<ApiConfiguration>();
+
+            // Setup IdentityServer4
+            services.AddAuthentication("Bearer")
+                .AddJwtBearer("Bearer", options => {
+                    options.Authority = apiConf.Authority;
+                    options.RequireHttpsMetadata = false;
+
+                    options.Audience = apiConf.Audience;
+                });
+
+
             // Setup entity services
             services.AddTransient<IMovieService, MovieService>();
 
@@ -57,10 +67,6 @@ namespace MovieLand.Api
                 return new LocalFileClient(swwwRootPath);
             });
 
-            // Setup custom configurations
-            var moviePosterFileConfiguration = Configuration.GetSection("MoviePosterFileConfiguration");
-            services.Configure<MoviePosterFileConfiguration>(moviePosterFileConfiguration);
-
             // Setup mapping profiles
             var mappingConfig = new MapperConfiguration(mc => {
                 mc.AddProfile(new MappingProfileBLL());
@@ -69,29 +75,21 @@ namespace MovieLand.Api
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddCors(options => {
+                // this defines a CORS policy called "default"
+                options.AddPolicy("default", policy => {
+                    policy.WithOrigins("http://localhost:5003")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
-            if (env.IsDevelopment()) {
-                app.UseDeveloperExceptionPage();
-            }
-            else {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.UseCookiePolicy();
-
-            app.UseMvc(routes => {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+        public void Configure(IApplicationBuilder app) {
+            app.UseCors("default");
+            app.UseAuthentication();
+            app.UseMvc();
         }
     }
 }
