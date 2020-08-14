@@ -11,6 +11,7 @@ using MovieLand.BLL.Dtos.Country;
 using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.BLL.Extensions;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Builders;
 using MovieLand.Data.Contracts.Repositories;
@@ -110,7 +111,7 @@ namespace MovieLand.BLL.Services
         }
 
         // Get movies list by page request
-        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(DataTablesParameters table) {
+        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(MovieDataTablesParameters table) {
             try {
                 MovieListItemDto[] items = null;
                 // Get total size
@@ -120,9 +121,21 @@ namespace MovieLand.BLL.Services
                 var queryBuilder = new EntityQueryBuilder<Movie>();
 
                 // Filter
+                Expression<Func<Movie, bool>> filter = m => true;
+                // Genre
+                if (table.Genre.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieGenres.Count(mg => mg.GenreId == table.Genre.Value) > 0);
+                // Country
+                if (table.Country.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieCountries.Count(mg => mg.CountryId == table.Country.Value) > 0);
+                // Artist
+                if (table.Artist.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieArtists.Count(mg => mg.ArtistId == table.Artist.Value) > 0);
+                // Search
                 if (!string.IsNullOrEmpty(table.Search.Value))
-                    queryBuilder.SetFilter(m => m.Name.Contains(table.Search.Value) || m.OriginalName.Contains(table.Search.Value) || m.ReleaseYear.ToString() == table.Search.Value);
+                    filter = filter.CombineWithAndAlso(m => m.Name.Contains(table.Search.Value) || m.OriginalName.Contains(table.Search.Value) || m.ReleaseYear.ToString() == table.Search.Value);
 
+                queryBuilder.SetFilter(filter);
                 // Order
                 var order = table.Order[0];
                 Expression<Func<Movie, object>> orderProperty = null;
@@ -336,63 +349,6 @@ namespace MovieLand.BLL.Services
             catch (Exception ex) {
                 return OperationDetails<bool>.Failure().AddError(ex.Message);
             }
-        }
-
-        // Get movies by genre
-        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByGenreAsync(Guid genreId, int length, int start) {
-            MovieListItemDto[] items = null;
-            // Get total size
-            var size = await _unitOfWork.Movies.CountMoviesByGenreAsync(genreId);
-
-            // Get movies
-            var movies = await _unitOfWork.Movies.GetMoviesByGenreAsync(genreId, length, start);
-            // Map to dto
-            items = _mapper.Map<MovieListItemDto[]>(movies);
-
-            // Return result
-            var result = new DataTablesPagedResults<MovieListItemDto> {
-                Items = items,
-                TotalSize = size
-            };
-            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
-        }
-
-        // Get movies by country
-        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByCountryAsync(Guid countryId, int length, int start) {
-            MovieListItemDto[] items = null;
-            // Get total size
-            var size = await _unitOfWork.Movies.CountMoviesByCountryAsync(countryId);
-
-            // Get movies
-            var movies = await _unitOfWork.Movies.GetMoviesByCountryAsync(countryId, length, start);
-            // Map to dto
-            items = _mapper.Map<MovieListItemDto[]>(movies);
-
-            // Return result
-            var result = new DataTablesPagedResults<MovieListItemDto> {
-                Items = items,
-                TotalSize = size
-            };
-            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
-        }
-
-        // Get movies by artist
-        public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetByArtistAsync(Guid artistId, int length, int start) {
-            MovieListItemDto[] items = null;
-            // Get total size
-            var size = await _unitOfWork.Movies.CountMoviesByArtistAsync(artistId);
-
-            // Get movies
-            var movies = await _unitOfWork.Movies.GetMoviesByArtistAsync(artistId, length, start);
-            // Map to dto
-            items = _mapper.Map<MovieListItemDto[]>(movies);
-
-            // Return result
-            var result = new DataTablesPagedResults<MovieListItemDto> {
-                Items = items,
-                TotalSize = size
-            };
-            return OperationDetails<DataTablesPagedResults<MovieListItemDto>>.Success(result);
         }
 
         #endregion Interface implementations

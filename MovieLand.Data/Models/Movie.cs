@@ -36,5 +36,9 @@ namespace MovieLand.Data.Models
         public string Poster { get; set; }
 
         public double AvgRating { get; set; }
+
+        public virtual ICollection<MovieGenre> MovieGenres { get; set; }
+        public virtual ICollection<MovieCountry> MovieCountries { get; set; }
+        public virtual ICollection<MovieArtist> MovieArtists { get; set; }
     }
 }

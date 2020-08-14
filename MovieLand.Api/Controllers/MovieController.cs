@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MovieLand.Api.Models;
+using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.DataTables;
@@ -30,8 +31,8 @@ namespace MovieLand.Api.Controllers
 
         // GET: api/Movie
         [HttpGet]
-        public async Task<IActionResult> Get(string search, int start = 0, int length = 10) {
-            var param = new DataTablesParameters {
+        public async Task<IActionResult> Get([FromQuery]MovieFilterParameters filters, [FromQuery]PaginationParameters pagination) {
+            var param = new MovieDataTablesParameters {
                 Columns = new DTColumn[1] {
                     new DTColumn() { Data = "Name", Name = "Name", Orderable = true, Searchable = true }
                 },
@@ -39,70 +40,22 @@ namespace MovieLand.Api.Controllers
                     new DTOrder() { Column = 0, Dir = DTOrderDir.ASC }
                 },
                 Draw = 0,
-                Start = start,
-                Length = length,
+                Start = pagination.Offset,
+                Length = pagination.Limit,
                 Search = new DTSearch() {
-                    Value = search ?? "",
+                    Value = filters.Search ?? "",
                     Regex = false
-                }
+                },
+                Genre = filters.Genre,
+                Country = filters.Country,
+                Artist = filters.Artist
             };
-
             var result = await _movieService.GetAsync(param);
-            if (result.IsSuccess) {
-                return Ok(new DataTablesResult<MovieListItemDto> {
-                    Draw = param.Draw,
-                    Data = result.Entity.Items,
-                    RecordsFiltered = result.Entity.Items.Count(),
-                    RecordsTotal = result.Entity.TotalSize
-                });
-            }
-            return StatusCode(500, "Internal server error");
-        }
 
-        // GET: api/Movie/Genre/{id}
-        [HttpGet]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> Genre(Guid id, int start = 0, int length = 10) {
-            var result = await _movieService.GetByGenreAsync(id, length, start);
             if (result.IsSuccess) {
-                return Ok(new DataTablesResult<MovieListItemDto> {
-                    Draw = 0,
-                    Data = result.Entity.Items,
-                    RecordsFiltered = result.Entity.Items.Count(),
-                    RecordsTotal = result.Entity.TotalSize
-                });
-            }
-            return StatusCode(500, "Internal server error");
-        }
-
-        // GET: api/Movie/Country/{id}
-        [HttpGet]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> Country(Guid id, int start = 0, int length = 10) {
-            var result = await _movieService.GetByCountryAsync(id, length, start);
-            if (result.IsSuccess) {
-                return Ok(new DataTablesResult<MovieListItemDto> {
-                    Draw = 0,
-                    Data = result.Entity.Items,
-                    RecordsFiltered = result.Entity.Items.Count(),
-                    RecordsTotal = result.Entity.TotalSize
-                });
-            }
-            return StatusCode(500, "Internal server error");
-        }
-
-        // GET: api/Movie/Artist/{id}
-        [HttpGet]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> Artist(Guid id, int start = 0, int length = 10) {
-            var result = await _movieService.GetByArtistAsync(id, length, start);
-            if (result.IsSuccess) {
-                return Ok(new DataTablesResult<MovieListItemDto> {
-                    Draw = 0,
-                    Data = result.Entity.Items,
-                    RecordsFiltered = result.Entity.Items.Count(),
-                    RecordsTotal = result.Entity.TotalSize
-                });
+                return Ok(new ArrayResult<MovieListItemDto>(
+                    result.Entity.Items
+                ));
             }
             return StatusCode(500, "Internal server error");
         }

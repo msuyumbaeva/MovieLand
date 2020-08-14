@@ -12,14 +12,12 @@ namespace MovieLand.Data.Contracts.Repositories
         Task<Movie> GetByIdAsync(Guid id);
 
         Task<IEnumerable<Genre>> GetGenresByMovieAsync(Guid movieId);
-        Task<IEnumerable<Movie>> GetMoviesByGenreAsync(Guid genreId, int limit, int offset);
         Task<int> CountMoviesByGenreAsync(Guid genreId);
         Task<bool> IsInGenreAsync(Guid movieId, Guid genreId);
         Task AddToGenreAsync(MovieGenre movieGenre);
         void RemoveFromGenre(MovieGenre movieGenre);
 
         Task<IEnumerable<Country>> GetCountriesByMovieAsync(Guid movieId);
-        Task<IEnumerable<Movie>> GetMoviesByCountryAsync(Guid countryId, int limit, int offset);
         Task<int> CountMoviesByCountryAsync(Guid countryId);
         Task<bool> IsInCountryAsync(Guid movieId, Guid countryId);
         Task AddToCountryAsync(MovieCountry movieCountry);
@@ -29,7 +27,6 @@ namespace MovieLand.Data.Contracts.Repositories
         Task<IEnumerable<Artist>> GetArtistsByMovieAndCareerAsync(Guid movieId, CareerEnum career);
         Task<int> CountMoviesByArtistAsync(Guid artistId);
         Task<MovieArtist> GetByMovieAndArtistAndCareerAsync(Guid movieId, Guid artistId, CareerEnum career);
-        Task<IEnumerable<Movie>> GetMoviesByArtistAsync(Guid artistId, int limit, int offset);
         Task AddToArtistAndCareerAsync(MovieArtist movieArtist);
         void RemoveFromArtistAndCareer(MovieArtist movieArtist);
         void UpdateArtist(MovieArtist movieArtist);

@@ -34,7 +34,7 @@ namespace MovieLand.Controllers
             return View();
         }
 
-        public async Task<IActionResult> LoadTable([FromBody] DataTablesParameters param) {
+        public async Task<IActionResult> LoadTable([FromBody] MovieDataTablesParameters param) {
             var result = await _movieService.GetAsync(param);
             if (result.IsSuccess) {
                 return new JsonResult(new DataTablesResult<MovieListItemDto> {

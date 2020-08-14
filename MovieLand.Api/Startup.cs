@@ -20,11 +20,9 @@ namespace MovieLand.Api
     {
         public Startup(IConfiguration configuration) {
             Configuration = configuration;
-            swwwRootPath = @"C:\Users\E7450\source\repos\MovieLand\MovieLand\wwwroot\";
         }
 
         public IConfiguration Configuration { get; }
-        public string swwwRootPath { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
@@ -63,8 +61,9 @@ namespace MovieLand.Api
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            var filePath = Configuration["LocalFilesRoot"];
             services.AddScoped<IFileClient, LocalFileClient>(client => {
-                return new LocalFileClient(swwwRootPath);
+                return new LocalFileClient(filePath);
             });
 
             // Setup mapping profiles

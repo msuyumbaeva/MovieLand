@@ -96,38 +96,6 @@ namespace MovieLand.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Movie>> GetMoviesByArtistAsync(Guid artistId, int limit, int offset) {
-            return await _context.MovieArtists
-                .Include(m => m.Movie)
-                .Where(m => m.ArtistId == artistId)
-                .OrderBy(m => m.Priority)
-                .Skip(offset)
-                .Take(limit)
-                .Select(m=>m.Movie)
-                .Distinct()
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Movie>> GetMoviesByCountryAsync(Guid countryId, int limit, int offset) {
-            return await _context.MovieContries
-                .Include(m => m.Movie)
-                .Where(m => m.CountryId == countryId)
-                .Skip(offset)
-                .Take(limit)
-                .Select(m => m.Movie)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Movie>> GetMoviesByGenreAsync(Guid genreId, int limit, int offset) {
-            return await _context.MovieGenres
-                .Include(m => m.Movie)
-                .Where(m => m.GenreId == genreId)
-                .Skip(offset)
-                .Take(limit)
-                .Select(m => m.Movie)
-                .ToListAsync();
-        }
-
         public async Task<bool> IsInCountryAsync(Guid movieId, Guid countryId) {
             return (await _context.MovieContries
                 .Where(m => m.MovieId == movieId && m.CountryId == countryId)
