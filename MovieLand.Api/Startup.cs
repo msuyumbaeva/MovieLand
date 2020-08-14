@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 using MovieLand.Api.Models;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
@@ -33,9 +35,7 @@ namespace MovieLand.Api
             var apiConfSection = Configuration.GetSection("ApiConfiguration");
             services.Configure<ApiConfiguration>(apiConfSection);
 
-            services.AddMvcCore()
-                .AddAuthorization()
-                .AddJsonFormatters();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
 
             // Setup db connection
             var connection = Configuration.GetConnectionString("DefaultConnection");
@@ -83,13 +83,33 @@ namespace MovieLand.Api
                         .AllowAnyMethod();
                 });
             });
+
+            // Setup swagger
+            services.AddSwaggerGen(c => {
+                c.SwaggerDoc("v1", new OpenApiInfo {
+                    Title = "MovieLand API docs",
+                    Version = "v1"
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app) {
             app.UseCors("default");
             app.UseAuthentication();
-            app.UseMvc();
+            app.UseStaticFiles();
+            app.UseMvcWithDefaultRoute();
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+            // specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });
+
+            //app.UseMvc();
         }
     }
 }
