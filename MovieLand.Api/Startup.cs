@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Services;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Contracts.Repositories;
+using MovieLand.Data.Models;
 using MovieLand.Data.Repositories;
 
 namespace MovieLand.Api
@@ -44,10 +46,25 @@ namespace MovieLand.Api
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseSqlServer(connection);
 
+            services.AddIdentity<AppUser, AppRole>(o => {
+                // configure identity options
+                o.Password.RequireDigit = false;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
+                o.Password.RequiredLength = 6;
+            })
+                .AddUserManager<AppUserManager>()
+                .AddRoleManager<AppRoleManager>()
+                .AddEntityFrameworkStores<AppDbContext>();
+
             var apiConf = apiConfSection.Get<ApiConfiguration>();
 
             // Setup IdentityServer4
-            services.AddAuthentication("Bearer")
+            services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer("Bearer", options => {
                     options.Authority = apiConf.Authority;
                     options.RequireHttpsMetadata = false;
@@ -55,9 +72,9 @@ namespace MovieLand.Api
                     options.Audience = apiConf.Audience;
                 });
 
-
             // Setup entity services
             services.AddTransient<IMovieService, MovieService>();
+            services.AddTransient<ICommentService, CommentService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

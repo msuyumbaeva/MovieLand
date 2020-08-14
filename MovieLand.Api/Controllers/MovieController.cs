@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MovieLand.Api.Models;
+using MovieLand.Api.Models.Comment;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos.Comment;
 using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Movie;
 using Newtonsoft.Json;
@@ -20,15 +24,18 @@ namespace MovieLand.Api.Controllers
     public class MovieController : ControllerBase
     {
         private readonly IMovieService _movieService;
+        private readonly ICommentService _commentService;
         private readonly IFileClient _fileClient;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
 
-        public MovieController(IMovieService movieService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
+        public MovieController(IMovieService movieService, ICommentService commentService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
+            _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
             _fileClient = fileClient ?? throw new ArgumentNullException(nameof(fileClient));
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
         }
 
+        #region Genre endpoints
         // GET: api/Movie
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]MovieFilterParameters filters, [FromQuery]PaginationParameters pagination) {
@@ -60,6 +67,18 @@ namespace MovieLand.Api.Controllers
             return StatusCode(500, "Internal server error");
         }
 
+        // GET: api/Movie/5
+        [HttpGet("{id}", Name = "Get")]
+        public async Task<IActionResult> Get(Guid id) {
+            var movieResult = await _movieService.GetByIdAsync(id);
+            if (movieResult.Entity == null)
+                return NotFound();
+            else
+                return Ok(movieResult.Entity);
+        }
+        #endregion Genre endpoints
+
+        #region Poster endpoints
         // GET: api/Movie/Poster/5
         [HttpGet]
         [Route("[action]/{id}")]
@@ -74,16 +93,45 @@ namespace MovieLand.Api.Controllers
             var fileStream = _fileClient.GetFile(_fileConfiguration.Directory, movieResult.Entity.Poster);
             return File(fileStream, "image/jpeg");
         }
+        #endregion Poster endpoints
 
-        // GET: api/Movie/5
-        [HttpGet("{id}", Name = "Get")]
-        public async Task<IActionResult> Get(Guid id) {
-            var movieResult = await _movieService.GetByIdAsync(id);
-            if (movieResult.Entity == null)
-                return NotFound();
-            else
-                return Ok(movieResult.Entity);
+        #region Comments endpoints
+        [HttpGet]
+        [Route("{id}/[action]")]
+        public async Task<IActionResult> Comments(Guid id, [FromQuery] PaginationParameters pagination) {
+            var param = new DataTablesParameters {
+                Draw = 0,
+                Start = pagination.Offset,
+                Length = pagination.Limit
+            };
+            var result = await _commentService.GetByMovieIdAsync(id, param);
+            if (result.IsSuccess) {
+                return Ok(new ArrayResult<CommentDto>(
+                    result.Entity.Items
+                ));
+            }
+            return StatusCode(500, "Internal server error");
         }
-        
+
+        [HttpPost]
+        [Route("{id}/[action]")]
+        [ActionName("Comments")]
+        [Authorize(Roles = "USER")]
+        public async Task<IActionResult> CreateComment(Guid id, [FromBody] CommentCreateRequest request) {
+            if (ModelState.IsValid) {
+                var commentDto = new CommentDto() {
+                    MovieId = id,
+                    Text = request.Text,
+                    UserName = User.Identity.Name
+                };
+                var result = await _commentService.CreateAsync(commentDto);
+                if (!result.IsSuccess) {
+                    return BadRequest(result.Errors);
+                }
+                return StatusCode(201);
+            }
+            return BadRequest();
+        }
+        #endregion Comments endpoints
     }
 }
