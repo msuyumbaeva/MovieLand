@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MovieLand.Api.Controllers
@@ -119,16 +120,20 @@ namespace MovieLand.Api.Controllers
         [Authorize(Roles = "USER")]
         public async Task<IActionResult> CreateComment(Guid id, [FromBody] CommentCreateRequest request) {
             if (ModelState.IsValid) {
+                var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return StatusCode((int)HttpStatusCode.Forbidden);
+
                 var commentDto = new CommentDto() {
                     MovieId = id,
                     Text = request.Text,
-                    UserName = User.Identity.Name
+                    User = userId
                 };
                 var result = await _commentService.CreateAsync(commentDto);
                 if (!result.IsSuccess) {
                     return BadRequest(result.Errors);
                 }
-                return StatusCode(201);
+                return StatusCode((int)HttpStatusCode.Created);
             }
             return BadRequest();
         }

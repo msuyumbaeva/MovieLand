@@ -48,12 +48,16 @@ namespace MovieLand.BLL
 
         private void CommentMapping() {
             CreateMap<Comment, CommentDto>()
-                .ForMember(dest=>dest.UserName, opt=>opt.MapFrom(src=>src.User.UserName))
-                .ReverseMap();
+                .ForMember(dest=>dest.User, opt=>opt.MapFrom(src=>src.User.UserName))
+                .ReverseMap()
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.User));
         }
 
         private void StarRatingMapping() {
             CreateMap<StarRatingDto, StarRating>()
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.User))
                 .ReverseMap();
         }
     }

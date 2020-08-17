@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -41,8 +42,12 @@ namespace MovieLand.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CommentCreateViewModel viewModel) {
             if (ModelState.IsValid) {
+                var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return StatusCode((int) HttpStatusCode.Forbidden);
+
                 var commentDto = _mapper.Map<CommentDto>(viewModel);
-                commentDto.UserName = User.Identity.Name;
+                commentDto.User = userId;
                 var result = await _commentService.CreateAsync(commentDto);
                 if (!result.IsSuccess) {
                     Response.StatusCode = (int)HttpStatusCode.BadRequest;

@@ -11,7 +11,7 @@ namespace MovieLand.BLL.Dtos.Comment
         public Guid MovieId { get; set; }
 
         [Required]
-        public string UserName { get; set; }
+        public string User { get; set; }
 
         [Required]
         [MaxLength(500)]

@@ -24,9 +24,9 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<bool>> SaveAsync(StarRatingDto ratingDto) {
             try {
                 // Find user
-                var user = await _userManager.FindByNameAsync(ratingDto.UserName);
+                var user = await _userManager.FindByIdAsync(ratingDto.User);
                 if (user == null)
-                    throw new Exception($"User {ratingDto.UserName} was not found");
+                    throw new Exception($"User with id {ratingDto.User} was not found");
 
                 // Find movie
                 var movie = await _unitOfWork.Movies.GetByIdAsync(ratingDto.MovieId);
@@ -35,7 +35,6 @@ namespace MovieLand.BLL.Services
 
                 // Map dto to entity
                 var rating = _mapper.Map<StarRating>(ratingDto);
-                rating.UserId = user.Id;
                 rating.CreatedAt = DateTime.Now;
 
                 // Filter by user id and movie id

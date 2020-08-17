@@ -39,7 +39,7 @@
                 name: "Name",
                 render: function (data, type, full, meta) {
                     return `<div">
-                                <p class="mb-1"><b>${full.UserName}</b> <i class="text-secondary">${full.LocalCreatedAt}</i></p>
+                                <p class="mb-1"><b>${full.User}</b> <i class="text-secondary">${full.LocalCreatedAt}</i></p>
                                 <p>${full.Text}</p>
                             </div>`;
                 }

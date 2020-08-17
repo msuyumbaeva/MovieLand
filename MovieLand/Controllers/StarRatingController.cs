@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace MovieLand.Controllers
@@ -27,14 +28,16 @@ namespace MovieLand.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "USER")]
         public async Task<IActionResult> Create([FromBody] StarRatingDto ratingDto) {
-            if (!User.Identity.IsAuthenticated) 
-                return new JsonResult(new { error = "Not authenticated" });
-
             if (!ModelState.IsValid)
                 return BadRequest();
 
-            ratingDto.UserName = User.Identity.Name;
+            var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return StatusCode((int)HttpStatusCode.Forbidden);
+
+            ratingDto.User = userId;
             var result = await _starRatingService.SaveAsync(ratingDto);
             if (!result.IsSuccess)
                 Response.StatusCode = (int)HttpStatusCode.BadRequest;

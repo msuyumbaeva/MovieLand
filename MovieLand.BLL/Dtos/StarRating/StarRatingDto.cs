@@ -10,7 +10,7 @@ namespace MovieLand.BLL.Dtos.StarRating
         [Required]
         public Guid MovieId { get; set; }
 
-        public string UserName { get; set; }
+        public string User { get; set; }
 
         [Range(1, 5)]
         public byte Value { get; set; }

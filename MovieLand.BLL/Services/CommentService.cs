@@ -26,14 +26,13 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<bool>> CreateAsync(CommentDto commentDto) {
             try {
                 // Find user
-                var user = await _userManager.FindByNameAsync(commentDto.UserName);
+                var user = await _userManager.FindByIdAsync(commentDto.User);
                 if (user == null)
-                    throw new Exception($"User {commentDto.UserName} was not found");
+                    throw new Exception($"User with id {commentDto.User} was not found");
 
                 // Map dto to entity
                 var comment = _mapper.Map<Comment>(commentDto);
                 comment.CreatedAt = DateTime.Now;
-                comment.UserId = user.Id;
 
                 // Create comment
                 await _unitOfWork.Comments.AddAsync(comment);
