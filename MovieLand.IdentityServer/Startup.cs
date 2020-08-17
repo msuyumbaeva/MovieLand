@@ -49,6 +49,7 @@ namespace MovieLand.IdentityServer
                .AddInMemoryIdentityResources(Config.GetIdentityResources())
                .AddInMemoryApiResources(Config.GetApis())
                .AddInMemoryClients(Config.GetClients())
+               .AddProfileService<ProfileService>()
                .AddAspNetIdentity<AppUser>();
 
             if (Environment.IsDevelopment()) {

@@ -1,6 +1,8 @@
-﻿using IdentityServer4;
+﻿using IdentityModel;
+using IdentityServer4;
 using IdentityServer4.Models;
 using System.Collections.Generic;
+using static IdentityServer4.IdentityServerConstants;
 
 namespace MovieLand.IdentityServer
 {
@@ -10,14 +12,14 @@ namespace MovieLand.IdentityServer
             return new List<IdentityResource>
             {
                 new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
+                new IdentityResources.Profile()
             };
         }
 
         public static IEnumerable<ApiResource> GetApis() {
             return new List<ApiResource>
             {
-                new ApiResource("api1", "My API")
+                new ApiResource("api1", "My API", new[] { JwtClaimTypes.Role, JwtClaimTypes.Name })
             };
         }
 
@@ -34,7 +36,11 @@ namespace MovieLand.IdentityServer
                     {
                         new Secret("secret".Sha256())
                     },
-                    AllowedScopes = { "api1" }
+                    AllowedScopes = {
+                        "api1",
+                        StandardScopes.OpenId,
+                        StandardScopes.Profile
+                    }
                 }
             };
         }
