@@ -76,6 +76,7 @@ namespace MovieLand.Api
             services.AddTransient<IMovieService, MovieService>();
             services.AddTransient<ICommentService, CommentService>();
             services.AddTransient<IStarRatingService, StarRatingService>();
+            services.AddTransient<IGenreService, GenreService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
