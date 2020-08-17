@@ -71,7 +71,7 @@ namespace MovieLand.Api.Controllers
                     result.Entity.Items
                 ));
             }
-            return StatusCode(500, "Internal server error");
+            return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
         // GET: api/Movie/5
@@ -92,7 +92,7 @@ namespace MovieLand.Api.Controllers
         public async Task<IActionResult> Poster(Guid id) {
             var movieResult = await _movieService.GetByIdAsync(id);
             if (!movieResult.IsSuccess)
-                return StatusCode(500, "Internal server error");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
 
             if (movieResult.Entity == null)
                 return NotFound();
@@ -103,6 +103,7 @@ namespace MovieLand.Api.Controllers
         #endregion Poster endpoints
 
         #region Comments endpoints
+        // GET: api/Movie/5/Comments
         [HttpGet]
         [Route("{id}/[action]")]
         public async Task<IActionResult> Comments(Guid id, [FromQuery] PaginationParameters pagination) {
@@ -117,9 +118,10 @@ namespace MovieLand.Api.Controllers
                     result.Entity.Items
                 ));
             }
-            return StatusCode(500, "Internal server error");
+            return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
+        // POST: api/Movie/5/Comments
         [HttpPost]
         [Route("{id}/[action]")]
         [ActionName("Comments")]
@@ -137,7 +139,7 @@ namespace MovieLand.Api.Controllers
                 };
                 var result = await _commentService.CreateAsync(commentDto);
                 if (!result.IsSuccess) {
-                    return BadRequest(result.Errors);
+                    return BadRequest(new { result.Errors });
                 }
                 return StatusCode((int)HttpStatusCode.Created);
             }
@@ -146,6 +148,7 @@ namespace MovieLand.Api.Controllers
         #endregion Comments endpoints
 
         #region StarRating endpoints
+        // POST: api/Movie/5/StarRating
         [HttpPost]
         [Route("{id}/[action]")]
         [Authorize(Roles = "USER")]
@@ -162,19 +165,20 @@ namespace MovieLand.Api.Controllers
                 };
                 var result = await _starRatingService.SaveAsync(ratingDto);
                 if (!result.IsSuccess) {
-                    return BadRequest(result.Errors);
+                    return BadRequest(new { result.Errors });
                 }
                 return StatusCode((int)HttpStatusCode.Created);
             }
             return BadRequest();
         }
 
+        // GET: api/Movie/5/StarRating
         [HttpGet]
         [Route("{id}/[action]")]
         public async Task<IActionResult> StarRating(Guid id) {
             var result = await _starRatingService.GetAverageRatingOfMovieAsync(id);
             if (!result.IsSuccess) {
-                return BadRequest(result.Errors);
+                return BadRequest(new { result.Errors });
             }
             return Ok(new { Value = result.Entity });
         }
