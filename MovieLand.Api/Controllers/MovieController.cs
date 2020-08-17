@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MovieLand.Api.Models;
 using MovieLand.Api.Models.Comment;
+using MovieLand.Api.Models.StarRating;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.Comment;
 using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.BLL.Dtos.StarRating;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -26,17 +28,21 @@ namespace MovieLand.Api.Controllers
     {
         private readonly IMovieService _movieService;
         private readonly ICommentService _commentService;
+        private readonly IStarRatingService _starRatingService;
         private readonly IFileClient _fileClient;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
 
-        public MovieController(IMovieService movieService, ICommentService commentService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
+        public MovieController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
+            _starRatingService = starRatingService ?? throw new ArgumentNullException(nameof(starRatingService));
             _fileClient = fileClient ?? throw new ArgumentNullException(nameof(fileClient));
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
         }
 
-        #region Genre endpoints
+
+
+        #region Movie endpoints
         // GET: api/Movie
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery]MovieFilterParameters filters, [FromQuery]PaginationParameters pagination) {
@@ -77,7 +83,7 @@ namespace MovieLand.Api.Controllers
             else
                 return Ok(movieResult.Entity);
         }
-        #endregion Genre endpoints
+        #endregion Movie endpoints
 
         #region Poster endpoints
         // GET: api/Movie/Poster/5
@@ -138,5 +144,41 @@ namespace MovieLand.Api.Controllers
             return BadRequest();
         }
         #endregion Comments endpoints
+
+        #region StarRating endpoints
+        [HttpPost]
+        [Route("{id}/[action]")]
+        [Authorize(Roles = "USER")]
+        public async Task<IActionResult> StarRating(Guid id, [FromBody] StarRatingCreateRequest request) {
+            if (ModelState.IsValid) {
+                var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return StatusCode((int)HttpStatusCode.Forbidden);
+
+                var ratingDto = new StarRatingDto() {
+                    MovieId = id,
+                    Value = request.Value,
+                    User = userId
+                };
+                var result = await _starRatingService.SaveAsync(ratingDto);
+                if (!result.IsSuccess) {
+                    return BadRequest(result.Errors);
+                }
+                return StatusCode((int)HttpStatusCode.Created);
+            }
+            return BadRequest();
+        }
+
+        [HttpGet]
+        [Route("{id}/[action]")]
+        public async Task<IActionResult> StarRating(Guid id) {
+            var result = await _starRatingService.GetAverageRatingOfMovieAsync(id);
+            if (!result.IsSuccess) {
+                return BadRequest(result.Errors);
+            }
+            return Ok(new { Value = result.Entity });
+        }
+
+        #endregion StarRating endpoints
     }
 }

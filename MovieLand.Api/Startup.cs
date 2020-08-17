@@ -75,6 +75,7 @@ namespace MovieLand.Api
             // Setup entity services
             services.AddTransient<IMovieService, MovieService>();
             services.AddTransient<ICommentService, CommentService>();
+            services.AddTransient<IStarRatingService, StarRatingService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
