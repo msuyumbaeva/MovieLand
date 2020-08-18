@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
+using MovieLand.Api.ResponseEnrichers;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
@@ -35,7 +37,7 @@ namespace MovieLand.Api
             var apiConfSection = Configuration.GetSection("ApiConfiguration");
             services.Configure<ApiConfiguration>(apiConfSection);
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest); 
 
             // Setup db connection
             var connection = Configuration.GetConnectionString("DefaultConnection");
@@ -109,6 +111,10 @@ namespace MovieLand.Api
                     Version = "v1"
                 });
             });
+
+            var filtertOptions = new HyperMediaFilterOptions();
+            filtertOptions.ObjectContentResponseEnricherList.Add(new GenreDtoEnricher());
+            services.AddSingleton(filtertOptions);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
