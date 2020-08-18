@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.Api.ResponseEnrichers;
+using MovieLand.Api.ResponseEnrichers.Movies;
 using MovieLand.BLL;
 using MovieLand.BLL.Configurations;
 using MovieLand.BLL.Contracts;
@@ -115,6 +116,9 @@ namespace MovieLand.Api
             var filtertOptions = new HyperMediaFilterOptions();
             filtertOptions.ObjectContentResponseEnricherList.Add(new GenreDtoEnricher());
             filtertOptions.ObjectContentResponseEnricherList.Add(new GenreResultSetEnricher());
+            filtertOptions.ObjectContentResponseEnricherList.Add(new MovieResultSetEnricher());
+            filtertOptions.ObjectContentResponseEnricherList.Add(new MovieDtoEnricher());
+            filtertOptions.ObjectContentResponseEnricherList.Add(new CommentResultSetEnricher());
             services.AddSingleton(filtertOptions);
         }
 

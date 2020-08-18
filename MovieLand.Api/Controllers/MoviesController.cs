@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.Api.Models.Comment;
 using MovieLand.Api.Models.StarRating;
@@ -44,8 +45,9 @@ namespace MovieLand.Api.Controllers
 
         #region Movie endpoints
         // GET: api/Movie
-        [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]MovieFilterParameters filters, [FromQuery]PaginationParameters pagination) {
+        [HttpGet(Name = nameof(GetMovies))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> GetMovies([FromQuery]MovieFilterParameters filters, [FromQuery]PaginationParameters pagination) {
             var param = new MovieDataTablesParameters {
                 Columns = new DTColumn[1] {
                     new DTColumn() { Data = "Name", Name = "Name", Orderable = true, Searchable = true }
@@ -76,21 +78,23 @@ namespace MovieLand.Api.Controllers
         }
 
         // GET: api/Movie/5
-        [HttpGet("{id}", Name = "Get")]
-        public async Task<IActionResult> Get(Guid id) {
+        [HttpGet("{id}", Name = nameof(GetMovie))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> GetMovie(Guid id) {
             var movieResult = await _movieService.GetByIdAsync(id);
             if (movieResult.Entity == null)
                 return NotFound();
             else
-                return Ok(movieResult.Entity);
+                return Ok(new HyperMediaLinksDecorator<MovieDto>(movieResult.Entity));
         }
         #endregion Movie endpoints
 
         #region Poster endpoints
         // GET: api/Movie/Poster/5
         [HttpGet]
-        [Route("[action]/{id}")]
-        public async Task<IActionResult> Poster(Guid id) {
+        [Route("{id}/[action]", Name = nameof(GetMoviePoster))]
+        [ActionName("Poster")]
+        public async Task<IActionResult> GetMoviePoster(Guid id) {
             var movieResult = await _movieService.GetByIdAsync(id);
             if (!movieResult.IsSuccess)
                 return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
@@ -106,8 +110,10 @@ namespace MovieLand.Api.Controllers
         #region Comments endpoints
         // GET: api/Movie/5/Comments
         [HttpGet]
-        [Route("{id}/[action]")]
-        public async Task<IActionResult> Comments(Guid id, [FromQuery] PaginationParameters pagination) {
+        [ActionName("Comments")]
+        [Route("{id}/[action]", Name = nameof(GetMovieComments))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> GetMovieComments(Guid id, [FromQuery] PaginationParameters pagination) {
             var param = new DataTablesParameters {
                 Draw = 0,
                 Start = pagination.Offset,
@@ -125,10 +131,10 @@ namespace MovieLand.Api.Controllers
 
         // POST: api/Movie/5/Comments
         [HttpPost]
-        [Route("{id}/[action]")]
+        [Route("{id}/[action]", Name = nameof(PostMovieComment))]
         [ActionName("Comments")]
         [Authorize(Roles = "USER")]
-        public async Task<IActionResult> CreateComment(Guid id, [FromBody] CommentCreateRequest request) {
+        public async Task<IActionResult> PostMovieComment(Guid id, [FromBody] CommentCreateRequest request) {
             if (ModelState.IsValid) {
                 var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (userId == null)
@@ -152,9 +158,10 @@ namespace MovieLand.Api.Controllers
         #region StarRating endpoints
         // POST: api/Movie/5/StarRating
         [HttpPost]
-        [Route("{id}/[action]")]
+        [Route("{id}/[action]", Name = nameof(PostMovieStarRating))]
+        [ActionName("StarRating")]
         [Authorize(Roles = "USER")]
-        public async Task<IActionResult> StarRating(Guid id, [FromBody] StarRatingCreateRequest request) {
+        public async Task<IActionResult> PostMovieStarRating(Guid id, [FromBody] StarRatingCreateRequest request) {
             if (ModelState.IsValid) {
                 var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (userId == null)
@@ -176,8 +183,9 @@ namespace MovieLand.Api.Controllers
 
         // GET: api/Movie/5/StarRating
         [HttpGet]
-        [Route("{id}/[action]")]
-        public async Task<IActionResult> StarRating(Guid id) {
+        [Route("{id}/[action]", Name = nameof(GetMovieStarRating))]
+        [ActionName("StarRating")]
+        public async Task<IActionResult> GetMovieStarRating(Guid id) {
             var result = await _starRatingService.GetAverageRatingOfMovieAsync(id);
             if (!result.IsSuccess) {
                 return BadRequest(new { result.Errors });
