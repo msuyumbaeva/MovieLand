@@ -15,14 +15,20 @@ namespace MovieLand.Api.ResponseEnrichers
             if(content.Methadata.Count > content.Count + content.Methadata.Offset)
                 content.Links.Add(new HyperMediaLink() {
                     Action = HttpActionVerb.GET,
-                    Href = urlHelper.Link("GetGenres", new { content.Methadata.Limit, Offset = content.Methadata.Offset + content.Methadata.Limit }),
+                    Href = urlHelper.Link("GetGenres", new {
+                        content.Methadata.Limit,
+                        Offset = content.Methadata.Offset + content.Methadata.Limit
+                    }),
                     Rel = RelationType.next
                 });
 
             if(content.Methadata.Offset > 0) {
                 content.Links.Add(new HyperMediaLink() {
                     Action = HttpActionVerb.GET,
-                    Href = urlHelper.Link("GetGenres", new { content.Methadata.Limit, Offset = content.Methadata.Offset - content.Methadata.Limit > 0 ? content.Methadata.Offset - content.Methadata.Limit : 0 }),
+                    Href = urlHelper.Link("GetGenres", new {
+                        content.Methadata.Limit,
+                        Offset = Math.Max(content.Methadata.Offset - content.Methadata.Limit, 0)
+                    }),
                     Rel = RelationType.previous
                 });
             }
