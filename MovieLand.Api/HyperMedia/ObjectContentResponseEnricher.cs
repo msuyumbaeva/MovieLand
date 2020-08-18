@@ -22,7 +22,7 @@ namespace MovieLand.Api.HyperMedia
             return contentType == typeof(T);
         }
 
-        protected abstract Task EnrichModel(T content, IUrlHelper urlHelper);
+        public abstract Task EnrichModel(T content, IUrlHelper urlHelper);
 
         bool IResponseEnricher.CanEnrich(ResultExecutingContext response) {
             if (response.Result is OkObjectResult okObjectResult)

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using MovieLand.Api.HyperMedia;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MovieLand.Api.Models
 {
-    public class ResultSet<T>
+    public class ResultSet<T> : ISupportsHyperMedia
     {
         public ResultSet(IEnumerable<T> items) {
             Items = items;
@@ -25,6 +26,7 @@ namespace MovieLand.Api.Models
         }
 
         public IEnumerable<T> Items { get; set; }
+        public List<HyperMediaLink> Links { get; set; } = new List<HyperMediaLink>();
     }
 
     public class ResultSetMethadata

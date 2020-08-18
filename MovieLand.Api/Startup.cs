@@ -114,6 +114,7 @@ namespace MovieLand.Api
 
             var filtertOptions = new HyperMediaFilterOptions();
             filtertOptions.ObjectContentResponseEnricherList.Add(new GenreDtoEnricher());
+            filtertOptions.ObjectContentResponseEnricherList.Add(new GenreResultSetEnricher());
             services.AddSingleton(filtertOptions);
         }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.DataTables;
@@ -26,8 +27,9 @@ namespace MovieLand.Api.Controllers
         }
 
         // GET: api/Genres
-        [HttpGet]
-        public async Task<IActionResult> Get(string search, [FromQuery]PaginationParameters pagination)
+        [HttpGet(Name = nameof(GetGenres))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> GetGenres(string search, [FromQuery]PaginationParameters pagination)
         {
             var param = new DataTablesParameters {
                 Columns = new DTColumn[1] {
@@ -56,18 +58,20 @@ namespace MovieLand.Api.Controllers
         }
 
         // GET: api/Genres/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Genre>> Get(Guid id)
+        [HttpGet("{id}", Name = nameof(GetGenre))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> GetGenre(Guid id)
         {
             var result = await _genreService.GetByIdAsync(id);
             if (result.Entity == null)
                 return NotFound();
-            return Ok(result.Entity);
+            return Ok(new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
 
         // PUT: api/Genres/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(Guid id, GenreDto genreDto)
+        [HttpPut("{id}", Name = nameof(PutGenre))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> PutGenre(Guid id, GenreDto genreDto)
         {
             if (id != genreDto.Id)
                 return BadRequest();
@@ -78,12 +82,13 @@ namespace MovieLand.Api.Controllers
             var result = await _genreService.SaveAsync(genreDto);
             if(!result.IsSuccess)
                 return BadRequest(new { result.Errors });
-            return Ok(result.Entity);
+            return Ok(new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
 
         // POST: api/Genres
-        [HttpPost]
-        public async Task<ActionResult<Genre>> Post(GenreDto genreDto)
+        [HttpPost(Name = nameof(PostGenre))]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> PostGenre(GenreDto genreDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
@@ -92,7 +97,7 @@ namespace MovieLand.Api.Controllers
             if (!result.IsSuccess)
                 return BadRequest(new { result.Errors });
 
-            return StatusCode((int)HttpStatusCode.Created, result.Entity);
+            return StatusCode((int)HttpStatusCode.Created, new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
     }
 }
