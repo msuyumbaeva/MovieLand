@@ -8,6 +8,6 @@ namespace MovieLand.Data.Contracts.Repositories
 {
     public interface ICommentRepository : IRepository<Comment>
     {
-        Task<IEnumerable<Comment>> GetByMovieIdAsync(Guid movieId);
+        Task<int> CountByMovieAsync(Guid movieId);
     }
 }

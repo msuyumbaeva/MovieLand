@@ -49,7 +49,7 @@ namespace MovieLand.BLL.Services
             try {
                 CommentDto[] items = null;
                 // Get total size
-                var size = await _unitOfWork.Comments.CountAsync();
+                var size = await _unitOfWork.Comments.CountByMovieAsync(movieId);
 
                 /// Query building
                 var queryBuilder = new EntityQueryBuilder<Comment>();

@@ -15,11 +15,10 @@ namespace MovieLand.Data.Repositories
         public CommentRepository(AppDbContext context) : base(context) {
         }
 
-        public async Task<IEnumerable<Comment>> GetByMovieIdAsync(Guid movieId) {
+        public async Task<int> CountByMovieAsync(Guid movieId) {
             return await DbSet
-                .Include(r => r.UserId)
                 .Where(r => r.MovieId == movieId)
-                .ToListAsync();
+                .CountAsync();
         }
     }
 }
