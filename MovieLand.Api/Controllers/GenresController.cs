@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +72,7 @@ namespace MovieLand.Api.Controllers
         // PUT: api/Genres/5
         [HttpPut("{id}", Name = nameof(PutGenre))]
         [TypeFilter(typeof(HyperMediaFilter))]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> PutGenre(Guid id, GenreDto genreDto)
         {
             if (id != genreDto.Id)
@@ -88,6 +90,7 @@ namespace MovieLand.Api.Controllers
         // POST: api/Genres
         [HttpPost(Name = nameof(PostGenre))]
         [TypeFilter(typeof(HyperMediaFilter))]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> PostGenre(GenreDto genreDto)
         {
             if (!ModelState.IsValid)
