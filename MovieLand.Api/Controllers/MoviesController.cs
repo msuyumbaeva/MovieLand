@@ -24,7 +24,7 @@ namespace MovieLand.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MovieController : ControllerBase
+    public class MoviesController : ControllerBase
     {
         private readonly IMovieService _movieService;
         private readonly ICommentService _commentService;
@@ -32,7 +32,7 @@ namespace MovieLand.Api.Controllers
         private readonly IFileClient _fileClient;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
 
-        public MovieController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
+        public MoviesController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
             _starRatingService = starRatingService ?? throw new ArgumentNullException(nameof(starRatingService));
