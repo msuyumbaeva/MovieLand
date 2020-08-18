@@ -67,8 +67,9 @@ namespace MovieLand.Api.Controllers
             var result = await _movieService.GetAsync(param);
 
             if (result.IsSuccess) {
-                return Ok(new ArrayResult<MovieListItemDto>(
-                    result.Entity.Items
+                return Ok(new ResultSet<MovieListItemDto>(
+                    result.Entity.Items,
+                    new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
@@ -114,8 +115,9 @@ namespace MovieLand.Api.Controllers
             };
             var result = await _commentService.GetByMovieIdAsync(id, param);
             if (result.IsSuccess) {
-                return Ok(new ArrayResult<CommentDto>(
-                    result.Entity.Items
+                return Ok(new ResultSet<CommentDto>(
+                    result.Entity.Items,
+                    new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });

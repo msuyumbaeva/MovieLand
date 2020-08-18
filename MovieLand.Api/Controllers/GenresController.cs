@@ -47,8 +47,9 @@ namespace MovieLand.Api.Controllers
             var result = await _genreService.GetAsync(param);
 
             if (result.IsSuccess) {
-                return Ok(new ArrayResult<GenreDto>(
-                    result.Entity.Items
+                return Ok(new ResultSet<GenreDto>(
+                    result.Entity.Items,
+                    new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
