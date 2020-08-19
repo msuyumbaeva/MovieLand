@@ -14,12 +14,12 @@ namespace MovieLand.Api.ResponseEnrichers
         public override Task EnrichModel(HyperMediaLinksDecorator<MovieDto> content, IUrlHelper urlHelper) {
             content.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.GET,
-                Href = urlHelper.Link("GetMovie", content.Data.Id),
+                Href = urlHelper.Link("GetMovie", new { content.Data.Id }),
                 Rel = RelationType.self
             });
             content.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.GET,
-                Href = urlHelper.Link("GetMoviePoster", content.Data.Id),
+                Href = urlHelper.Link("GetMoviePoster", new { content.Data.Id }),
                 Rel = RelationType.self
             });
             content.Links.Add(new HyperMediaLink() {
@@ -29,17 +29,17 @@ namespace MovieLand.Api.ResponseEnrichers
             });
             content.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.POST,
-                Href = urlHelper.Link("PostMovieComment", content.Data.Id),
+                Href = urlHelper.Link("PostMovieComment", new { content.Data.Id }),
                 Rel = RelationType.self
             });
             content.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.GET,
-                Href = urlHelper.Link("GetMovieStarRating", content.Data.Id),
+                Href = urlHelper.Link("GetMovieStarRating", new { content.Data.Id }),
                 Rel = RelationType.self
             });
             content.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.POST,
-                Href = urlHelper.Link("PostMovieStarRating", content.Data.Id),
+                Href = urlHelper.Link("PostMovieStarRating", new { content.Data.Id }),
                 Rel = RelationType.self
             });
             return null;

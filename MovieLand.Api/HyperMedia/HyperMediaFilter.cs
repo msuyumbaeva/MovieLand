@@ -21,8 +21,8 @@ namespace MovieLand.Api.HyperMedia
         }
 
         private void TryEnrichResult(ResultExecutingContext context) {
-            if (context.Result is OkObjectResult okObjectResult) {
-                if (okObjectResult.Value is ISupportsHyperMedia model) {
+            if (context.Result is ObjectResult objectResult) {
+                if (objectResult.Value is ISupportsHyperMedia model) {
                     var enricher = _hyperMediaFilterOptions.ObjectContentResponseEnricherList.FirstOrDefault(x => x.CanEnrich(context));
                     if (enricher != null)
                         Task.FromResult(enricher.Enrich(context));

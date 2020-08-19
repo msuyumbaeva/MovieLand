@@ -25,16 +25,16 @@ namespace MovieLand.Api.HyperMedia
         public abstract Task EnrichModel(T content, IUrlHelper urlHelper);
 
         bool IResponseEnricher.CanEnrich(ResultExecutingContext response) {
-            if (response.Result is OkObjectResult okObjectResult)
-                return CanEnrich(okObjectResult.Value.GetType());
+            if (response.Result is ObjectResult objectResult)
+                return CanEnrich(objectResult.Value.GetType());
             return false;
         }
 
         public async Task Enrich(ResultExecutingContext response) {
             // Get the urlHelper
             var urlHelper = (new UrlHelperFactory()).GetUrlHelper(response);
-            if (response.Result is OkObjectResult okObjectResult)
-                if (okObjectResult.Value is T model) 
+            if (response.Result is ObjectResult objectResult)
+                if (objectResult.Value is T model) 
                     await EnrichModel(model, urlHelper);
             await Task.FromResult<object>(null);
         }
