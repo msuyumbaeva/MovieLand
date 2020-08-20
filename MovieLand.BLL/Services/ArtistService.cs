@@ -27,27 +27,28 @@ namespace MovieLand.BLL.Services
                 queryBuilder.SetFilter(g => g.Name == artistDto.Name && g.Id != artistDto.Id);
                 var artistsWithSameName = await _unitOfWork.Artists.GetAsync(queryBuilder);
                 if (artistsWithSameName.Count() > 0) {
-                    throw new Exception($"Artist with name {artistDto.Name} is already exists");
-                }
-
-                // Map dto to artist
-                var artist = _mapper.Map<Artist>(artistDto);
-
-                // Check if artist Id is empty
-                if (artist.Id == Guid.Empty) {
-                    // Add new artist
-                    artist = await _unitOfWork.Artists.AddAsync(artist);
+                    artistDto = _mapper.Map<ArtistDto>(artistsWithSameName.First());
                 }
                 else {
-                    // Update existing artist
-                    _unitOfWork.Artists.Update(artist);
+                    // Map dto to artist
+                    var artist = _mapper.Map<Artist>(artistDto);
+
+                    // Check if artist Id is empty
+                    if (artist.Id == Guid.Empty) {
+                        // Add new artist
+                        artist = await _unitOfWork.Artists.AddAsync(artist);
+                    }
+                    else {
+                        // Update existing artist
+                        _unitOfWork.Artists.Update(artist);
+                    }
+
+                    // Save changes
+                    await _unitOfWork.CompleteAsync();
+
+                    // Map artist to dto
+                    artistDto = _mapper.Map<ArtistDto>(artist);
                 }
-
-                // Save changes
-                await _unitOfWork.CompleteAsync();
-
-                // Map artist to dto
-                artistDto = _mapper.Map<ArtistDto>(artist);
                 return OperationDetails<ArtistDto>.Success(artistDto);
             }
             catch (Exception ex) {

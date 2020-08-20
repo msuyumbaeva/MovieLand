@@ -32,27 +32,28 @@ namespace MovieLand.BLL.Services
                 queryBuilder.SetFilter(g => g.Name == countryDto.Name && g.Id != countryDto.Id);
                 var countriesWithSameName = await _unitOfWork.Countries.GetAsync(queryBuilder);
                 if (countriesWithSameName.Count() > 0) {
-                    throw new Exception($"Country with the name {countryDto.Name} is already exists");
-                }
-
-                // Map dto to country 
-                var country = _mapper.Map<Country>(countryDto);
-
-                // Check if country Id is empty
-                if (country.Id == Guid.Empty) {
-                    // Add new country
-                    country = await _unitOfWork.Countries.AddAsync(country);
+                    countryDto = _mapper.Map<CountryDto>(countriesWithSameName.First());
                 }
                 else {
-                    // Update existing country
-                    _unitOfWork.Countries.Update(country);
+                    // Map dto to country 
+                    var country = _mapper.Map<Country>(countryDto);
+
+                    // Check if country Id is empty
+                    if (country.Id == Guid.Empty) {
+                        // Add new country
+                        country = await _unitOfWork.Countries.AddAsync(country);
+                    }
+                    else {
+                        // Update existing country
+                        _unitOfWork.Countries.Update(country);
+                    }
+
+                    // Save changes
+                    await _unitOfWork.CompleteAsync();
+
+                    // Map country to dto
+                    countryDto = _mapper.Map<CountryDto>(country);
                 }
-
-                // Save changes
-                await _unitOfWork.CompleteAsync();
-
-                // Map country to dto
-                countryDto = _mapper.Map<CountryDto>(country);
                 return OperationDetails<CountryDto>.Success(countryDto);
             }
             catch (Exception ex) {

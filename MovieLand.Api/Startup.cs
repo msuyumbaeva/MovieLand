@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
+using MovieLand.Api.Models.MovieSources;
+using MovieLand.Api.Models.Omdb;
 using MovieLand.Api.ResponseEnrichers;
 using MovieLand.Api.ResponseEnrichers.Movies;
 using MovieLand.BLL;
@@ -37,6 +39,9 @@ namespace MovieLand.Api
 
             var apiConfSection = Configuration.GetSection("ApiConfiguration");
             services.Configure<ApiConfiguration>(apiConfSection);
+
+            var omdbConfSection = Configuration.GetSection("OmdbConfiguration");
+            services.Configure<OmdbConfiguration>(omdbConfSection);
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest); 
 
@@ -80,6 +85,8 @@ namespace MovieLand.Api
             services.AddTransient<ICommentService, CommentService>();
             services.AddTransient<IStarRatingService, StarRatingService>();
             services.AddTransient<IGenreService, GenreService>();
+            services.AddTransient<ICountryService, CountryService>();
+            services.AddTransient<IArtistService, ArtistService>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -91,6 +98,7 @@ namespace MovieLand.Api
             // Setup mapping profiles
             var mappingConfig = new MapperConfiguration(mc => {
                 mc.AddProfile(new MappingProfileBLL());
+                mc.AddProfile(new MappingProfileApi());
             });
 
             IMapper mapper = mappingConfig.CreateMapper();
@@ -120,6 +128,12 @@ namespace MovieLand.Api
             filtertOptions.ObjectContentResponseEnricherList.Add(new MovieDtoEnricher());
             filtertOptions.ObjectContentResponseEnricherList.Add(new CommentResultSetEnricher());
             services.AddSingleton(filtertOptions);
+
+            var omdbConfig = omdbConfSection.Get<OmdbConfiguration>();
+
+            var movieSourceOptions = new MovieSourceOptions();
+            movieSourceOptions.MovieSourcesList.Add(new OmdbSource(mapper, omdbConfig));
+            services.AddSingleton(movieSourceOptions);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

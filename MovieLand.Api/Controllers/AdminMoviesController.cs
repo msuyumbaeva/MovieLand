@@ -1,14 +1,26 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.Api.Models.Movie;
+using MovieLand.Api.Models.MovieSources;
+using MovieLand.Api.Models.Omdb;
 using MovieLand.BLL.Contracts;
+using MovieLand.BLL.Dtos.Artist;
+using MovieLand.BLL.Dtos.Country;
+using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
+using MovieLand.Data.Enums;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MovieLand.Api.Controllers
@@ -19,9 +31,20 @@ namespace MovieLand.Api.Controllers
     public class AdminMoviesController : ControllerBase
     {
         private readonly IMovieService _movieService;
+        private readonly IGenreService _genreService;
+        private readonly ICountryService _countryService;
+        private readonly IArtistService _artistService;
+        private readonly MovieSourceOptions _movieSourceOptions;
+        private readonly IMapper _mapper;
+        private static readonly HttpClient HttpClient = new HttpClient();
 
-        public AdminMoviesController(IMovieService movieService) {
+        public AdminMoviesController(IMovieService movieService, IGenreService genreService, ICountryService countryService, IArtistService artistService, MovieSourceOptions movieSourceOptions, IMapper mapper) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
+            _genreService = genreService ?? throw new ArgumentNullException(nameof(genreService));
+            _countryService = countryService ?? throw new ArgumentNullException(nameof(countryService));
+            _artistService = artistService ?? throw new ArgumentNullException(nameof(artistService));
+            _movieSourceOptions = movieSourceOptions ?? throw new ArgumentNullException(nameof(movieSourceOptions));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         #region Movies endpoints
@@ -40,6 +63,104 @@ namespace MovieLand.Api.Controllers
             var response = new HyperMediaLinksDecorator<MovieDto>(result.Entity);
             EnrichMovieDtoResponse(response);
             return StatusCode((int)HttpStatusCode.Created, response);
+        }
+
+        [HttpPost]
+        [Route("[action]",Name = nameof(PostMovieFromExternalSource))]
+        [ActionName("External")]
+        [TypeFilter(typeof(HyperMediaFilter))]
+        public async Task<IActionResult> PostMovieFromExternalSource([FromBody] MovieSourceRequest request) {
+            // Find source from list
+            var source = _movieSourceOptions.MovieSourcesList.FirstOrDefault(m => m.Name == request.Source);
+            if (source == null)
+                return BadRequest("Source was not found");
+
+            try {
+                // Get movie from source
+                var movieSourceDto = await source.GetMovieAsync(HttpClient, request.Value);
+
+                // Map movie from source to MovieCreateDto object
+                var createDto = _mapper.Map<MovieCreateDto>(movieSourceDto);
+                // Save movie to db
+                var movieResult = await _movieService.SaveAsync(createDto);
+                if (!movieResult.IsSuccess)
+                    throw new Exception(movieResult.Errors.First());
+
+                // Get created movie
+                var createdMovie = movieResult.Entity;
+
+                // Set movie genres
+                foreach(var genreName in movieSourceDto.Genres) {
+                    // Get or create genre 
+                    var genreResult = await _genreService.SaveAsync(new GenreDto() { Name = genreName });
+                    if (!genreResult.IsSuccess)
+                        throw new Exception(genreResult.Errors.First());
+
+                    // Add genre to movie
+                    var movieGenreResult = await _movieService.AddGenreAsync(createdMovie.Id, genreResult.Entity.Id);
+                    if (!movieGenreResult.IsSuccess)
+                        throw new Exception(movieGenreResult.Errors.First());
+
+                    createdMovie.Genres.Add(genreResult.Entity);
+                }
+
+                // Set movie countries
+                foreach (var countryName in movieSourceDto.Countries) {
+                    // Get or create country
+                    var countryResult = await _countryService.SaveAsync(new CountryDto() { Name = countryName });
+                    if (!countryResult.IsSuccess)
+                        throw new Exception(countryResult.Errors.First());
+
+                    // Add country to movie
+                    var movieCountryResult = await _movieService.AddCountryAsync(createdMovie.Id, countryResult.Entity.Id);
+                    if (!movieCountryResult.IsSuccess)
+                        throw new Exception(movieCountryResult.Errors.First());
+
+                    createdMovie.Countries.Add(countryResult.Entity);
+                }
+
+                // Set movie directors
+                byte priority = 1;
+                foreach (var directorsName in movieSourceDto.Directors) {
+                    // Get or create artist
+                    var artistResult = await _artistService.SaveAsync(new ArtistDto() { Name = directorsName });
+                    if (!artistResult.IsSuccess)
+                        throw new Exception(artistResult.Errors.First());
+
+                    // Add artist to movie
+                    var movieArtistResult = await _movieService.SaveArtistAsync(createdMovie.Id, new MovieArtistDto(artistResult.Entity.Id, CareerEnum.Director, priority));
+                    if (!movieArtistResult.IsSuccess)
+                        throw new Exception(movieArtistResult.Errors.First());
+
+                    createdMovie.Directors.Add(artistResult.Entity);
+                    priority++;
+                }
+
+                // Set movie actors
+                priority = 1;
+                foreach (var actorsName in movieSourceDto.Actors) {
+                    // Get or create artist
+                    var artistResult = await _artistService.SaveAsync(new ArtistDto() { Name = actorsName });
+                    if (!artistResult.IsSuccess)
+                        throw new Exception(artistResult.Errors.First());
+
+                    // Add artist to movie
+                    var movieArtistResult = await _movieService.SaveArtistAsync(createdMovie.Id, new MovieArtistDto(artistResult.Entity.Id, CareerEnum.Actor, priority));
+                    if (!movieArtistResult.IsSuccess)
+                        throw new Exception(movieArtistResult.Errors.First());
+
+                    createdMovie.Actors.Add(artistResult.Entity);
+                    priority++;
+                }
+
+                // Add Hypermedia links to response
+                var response = new HyperMediaLinksDecorator<MovieDto>(createdMovie);
+                EnrichMovieDtoResponse(response);
+                return StatusCode((int)HttpStatusCode.Created, response);
+            }
+            catch (Exception ex) {
+                return BadRequest(new { errors = new string[] { ex.Message } });
+            }
         }
 
         #endregion Movies endpoints
@@ -150,6 +271,12 @@ namespace MovieLand.Api.Controllers
             movieDto.Links.Add(new HyperMediaLink() {
                 Action = HttpActionVerb.POST,
                 Href = Url.Link(nameof(PostMovie), null),
+                Rel = RelationType.self
+            });
+
+            movieDto.Links.Add(new HyperMediaLink() {
+                Action = HttpActionVerb.POST,
+                Href = Url.Link(nameof(PostMovieFromExternalSource), null),
                 Rel = RelationType.self
             });
 

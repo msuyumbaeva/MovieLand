@@ -37,27 +37,28 @@ namespace MovieLand.BLL.Services
                 queryBuilder.SetFilter(g => g.Name == genreDto.Name && g.Id != genreDto.Id);
                 var genresWithSameName = await _unitOfWork.Genres.GetAsync(queryBuilder);
                 if (genresWithSameName.Count() > 0) {
-                    throw new Exception($"Genre with the name {genreDto.Name} is already exists");
-                }
-
-                // Map dto to genre 
-                var genre = _mapper.Map<Genre>(genreDto);
-
-                // Check if genre Id is empty
-                if (genre.Id == Guid.Empty) {
-                    // Add new genre
-                    genre = await _unitOfWork.Genres.AddAsync(genre);
+                    genreDto = _mapper.Map<GenreDto>(genresWithSameName.First());
                 }
                 else {
-                    // Update existing genre
-                    _unitOfWork.Genres.Update(genre);
+                    // Map dto to genre 
+                    var genre = _mapper.Map<Genre>(genreDto);
+
+                    // Check if genre Id is empty
+                    if (genre.Id == Guid.Empty) {
+                        // Add new genre
+                        genre = await _unitOfWork.Genres.AddAsync(genre);
+                    }
+                    else {
+                        // Update existing genre
+                        _unitOfWork.Genres.Update(genre);
+                    }
+
+                    // Save changes
+                    await _unitOfWork.CompleteAsync();
+
+                    // Map genre to dto
+                    genreDto = _mapper.Map<GenreDto>(genre);
                 }
-
-                // Save changes
-                await _unitOfWork.CompleteAsync();
-
-                // Map genre to dto
-                genreDto = _mapper.Map<GenreDto>(genre);
                 return OperationDetails<GenreDto>.Success(genreDto);
             }
             catch (Exception ex) {

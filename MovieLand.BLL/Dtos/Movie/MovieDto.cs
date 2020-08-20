@@ -15,6 +15,8 @@ namespace MovieLand.BLL.Dtos.Movie
         public MovieDto() {
             Genres = new List<GenreDto>();
             Countries = new List<CountryDto>();
+            Directors = new List<ArtistDto>();
+            Actors = new List<ArtistDto>();
         }
 
         public Guid Id { get; set; }
