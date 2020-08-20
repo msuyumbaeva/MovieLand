@@ -20,6 +20,8 @@ namespace MovieLand.Api.Models.Omdb
         private readonly static string API_KEY = "apikey";
         private readonly static string ID_KEY = "i";
         private readonly static string PLOT_KEY = "plot=full";
+        private readonly static string SEARCH_KEY = "s";
+        private readonly static string PAGE_KEY = "page";
 
         private readonly IMapper _mapper;
         private readonly OmdbConfiguration _configuration;
@@ -79,6 +81,25 @@ namespace MovieLand.Api.Models.Omdb
             }
 
             return movie;
+        }
+
+        public async Task<object> SearchMovieAsync(HttpClient httpClient, string value, int page) {
+            value = value.Replace(' ', '+');
+            // Build url
+            var url = string.Format("{0}?{1}={2}&{3}={4}&{5}={6}", _configuration.URL, API_KEY, _configuration.ApiKey, SEARCH_KEY , value, PAGE_KEY, page);
+            // Get movie
+            using (var response = await httpClient.GetAsync(url)) {
+                // Check status code
+                if (!response.IsSuccessStatusCode)
+                    throw new Exception();
+
+                // Get content as string
+                var responseContent = await response.Content.ReadAsStringAsync();
+                // Deserialize to OmdbMovie object
+                var omdbMovies = JsonConvert.DeserializeObject<OmdbMovieList>(responseContent);
+
+                return omdbMovies;
+            }
         }
     }
 }

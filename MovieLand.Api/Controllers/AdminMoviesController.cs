@@ -65,6 +65,24 @@ namespace MovieLand.Api.Controllers
             return StatusCode((int)HttpStatusCode.Created, response);
         }
 
+        [HttpGet]
+        [Route("[action]", Name = nameof(GetMoviesFromExternalSource))]
+        [ActionName("External")]
+        public async Task<IActionResult> GetMoviesFromExternalSource([FromQuery] MovieSourceRequest request, int page = 1) {
+            // Find source from list
+            var source = _movieSourceOptions.MovieSourcesList.FirstOrDefault(m => m.Name == request.Source);
+            if (source == null)
+                return BadRequest("Source was not found");
+            try {
+                // Get movies from source
+                var movies = await source.SearchMovieAsync(HttpClient, request.Value, page);
+                return Ok(movies);
+            }
+            catch (Exception ex) {
+                return BadRequest(new { errors = new string[] { ex.Message } });
+            }
+        }
+
         [HttpPost]
         [Route("[action]",Name = nameof(PostMovieFromExternalSource))]
         [ActionName("External")]

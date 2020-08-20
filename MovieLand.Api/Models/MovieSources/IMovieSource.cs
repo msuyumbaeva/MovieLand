@@ -11,5 +11,6 @@ namespace MovieLand.Api.Models.MovieSources
     {
         string Name { get; }
         Task<MovieSourceDto> GetMovieAsync(HttpClient httpClient, string value);
+        Task<object> SearchMovieAsync(HttpClient httpClient, string value, int page);
     }
 }
