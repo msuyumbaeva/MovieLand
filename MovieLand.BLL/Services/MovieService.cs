@@ -181,24 +181,11 @@ namespace MovieLand.BLL.Services
         // Get movie by Id
         public async Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id) {
             try {
-                var movie = await _unitOfWork.Movies.GetByIdAsync(id);
+                var movie = await _unitOfWork.Movies.GetFullByIdAsync(id);
                 if (movie == null)
                     throw new Exception($"Movie with Id {id} was not found");
 
                 var movieDto = _mapper.Map<MovieDto>(movie);
-
-                var genres = await _unitOfWork.Movies.GetGenresByMovieAsync(id);
-                movieDto.Genres = _mapper.Map<List<GenreDto>>(genres);
-
-                var countries = await _unitOfWork.Movies.GetCountriesByMovieAsync(id);
-                movieDto.Countries = _mapper.Map<List<CountryDto>>(countries);
-
-                var directors = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(id, CareerEnum.Director);
-                movieDto.Directors = _mapper.Map<List<ArtistDto>>(directors);
-
-                var actors = await _unitOfWork.Movies.GetArtistsByMovieAndCareerAsync(id, CareerEnum.Actor);
-                movieDto.Actors = _mapper.Map<List<ArtistDto>>(actors);
-
                 return OperationDetails<MovieDto>.Success(movieDto);
             }
             catch (Exception ex) {

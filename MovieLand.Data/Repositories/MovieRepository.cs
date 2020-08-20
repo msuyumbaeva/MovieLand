@@ -74,6 +74,14 @@ namespace MovieLand.Data.Repositories
             return DbSet.FindAsync(id);
         }
 
+        public Task<Movie> GetFullByIdAsync(Guid id) {
+            return DbSet
+                .Include("MovieGenres.Genre")
+                .Include("MovieCountries.Country")
+                .Include("MovieArtists.Artist")
+                .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
         public async Task<MovieArtist> GetByMovieAndArtistAndCareerAsync(Guid movieId, Guid artistId, CareerEnum career) {
             return await _context.MovieArtists
                 .Where(m => m.MovieId == movieId && m.ArtistId == artistId && m.CareerId == career)

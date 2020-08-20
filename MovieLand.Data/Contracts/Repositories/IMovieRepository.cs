@@ -10,6 +10,7 @@ namespace MovieLand.Data.Contracts.Repositories
     public interface IMovieRepository : IRepository<Movie>
     {
         Task<Movie> GetByIdAsync(Guid id);
+        Task<Movie> GetFullByIdAsync(Guid id);
 
         Task<IEnumerable<Genre>> GetGenresByMovieAsync(Guid movieId);
         Task<int> CountMoviesByGenreAsync(Guid genreId);
