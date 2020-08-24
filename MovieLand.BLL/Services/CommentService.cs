@@ -47,6 +47,9 @@ namespace MovieLand.BLL.Services
         // Get comments of movie
         public async Task<OperationDetails<DataTablesPagedResults<CommentDto>>> GetByMovieIdAsync(Guid movieId, DataTablesParameters table) {
             try {
+                if (table == null)
+                    throw new ArgumentNullException(nameof(table));
+
                 CommentDto[] items = null;
                 // Get total size
                 var size = await _unitOfWork.Comments.CountByMovieAsync(movieId);

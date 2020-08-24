@@ -93,6 +93,9 @@ namespace MovieLand.BLL.Services
         // Get genres by conditions
         public async Task<OperationDetails<DataTablesPagedResults<GenreDto>>> GetAsync(DataTablesParameters table) {
             try {
+                if (table == null)
+                    throw new ArgumentNullException(nameof(table));
+
                 GenreDto[] items = null;
                 // Get total size
                 var size = await _unitOfWork.Genres.CountAsync();
@@ -101,22 +104,25 @@ namespace MovieLand.BLL.Services
                 var queryBuilder = new EntityQueryBuilder<Genre>();
 
                 // Filter
-                if (!string.IsNullOrEmpty(table.Search.Value))
+                if (!string.IsNullOrEmpty(table.Search?.Value))
                     queryBuilder.SetFilter(m => m.Name.Contains(table.Search.Value));
 
                 // Order
-                var order = table.Order[0];
+                var order = table.Order?[0];
                 Expression<Func<Genre,string>> orderProperty = null;
 
                 // Order property
                 if (table.SortOrder == "Name")
                     orderProperty = m => m.Name;
 
-                // Order direction
-                if (order.Dir == DTOrderDir.ASC)
-                    queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
-                else
-                    queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+                if (orderProperty != null && order != null)
+                {
+                    // Order direction
+                    if (order.Dir == DTOrderDir.ASC)
+                        queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
+                    else
+                        queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+                }
 
                 // Limit
                 queryBuilder.SetLimit(table.Length);

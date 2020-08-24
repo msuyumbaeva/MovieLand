@@ -34,7 +34,7 @@ namespace MovieLand.BLL.Services
     {
         private readonly MoviePosterFileConfiguration _fileConfiguration;
         private readonly IFileClient _fileClient;
-        private readonly static string NO_MOVIE_POSTER_FILE_NAME = "no-movie-poster.svg";
+        private readonly static string NO_MOVIE_POSTER_FILE_NAME = "no-movie-poster.jpg";
 
         public MovieService(IMapper mapper, IUnitOfWork unitOfWork, IOptions<MoviePosterFileConfiguration> fileConfiguration, IFileClient fileClient) :  base(mapper, unitOfWork){
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
@@ -113,6 +113,9 @@ namespace MovieLand.BLL.Services
         // Get movies list by page request
         public async Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(MovieDataTablesParameters table) {
             try {
+                if (table == null)
+                    throw new ArgumentNullException(nameof(table));
+
                 MovieListItemDto[] items = null;
                 // Get total size
                 var size = await _unitOfWork.Movies.CountAsync();
@@ -132,12 +135,12 @@ namespace MovieLand.BLL.Services
                 if (table.Artist.HasValue)
                     filter = filter.CombineWithAndAlso(m => m.MovieArtists.Count(mg => mg.ArtistId == table.Artist.Value) > 0);
                 // Search
-                if (!string.IsNullOrEmpty(table.Search.Value))
+                if (!string.IsNullOrEmpty(table.Search?.Value))
                     filter = filter.CombineWithAndAlso(m => m.Name.Contains(table.Search.Value) || m.OriginalName.Contains(table.Search.Value) || m.ReleaseYear.ToString() == table.Search.Value);
 
                 queryBuilder.SetFilter(filter);
                 // Order
-                var order = table.Order[0];
+                var order = table.Order?[0];
                 Expression<Func<Movie, object>> orderProperty = null;
 
                 // Order property
@@ -146,11 +149,14 @@ namespace MovieLand.BLL.Services
                 else if (table.SortOrder == "ReleaseYear")
                     orderProperty = m => m.ReleaseYear;
 
-                // Order direction
-                if (order.Dir == DTOrderDir.ASC)
-                    queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
-                else
-                    queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+                if (orderProperty != null && order != null)
+                {
+                    // Order direction
+                    if (order.Dir == DTOrderDir.ASC)
+                        queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
+                    else
+                        queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+                }
 
                 // Limit
                 queryBuilder.SetLimit(table.Length);
