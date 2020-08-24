@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.757
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand", "MovieLand\MovieLand.csproj", "{A0109E0B-D716-4208-82ED-90EFE73767F7}"
 EndProject
@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.BLL", "MovieLand.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.Api", "MovieLand.Api\MovieLand.Api.csproj", "{A30A2968-A478-44A0-B011-76AE3C41B727}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieLand.IdentityServer", "MovieLand.IdentityServer\MovieLand.IdentityServer.csproj", "{3416E534-4D08-4F95-86C9-D3AE28115DCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovieLand.IdentityServer", "MovieLand.IdentityServer\MovieLand.IdentityServer.csproj", "{3416E534-4D08-4F95-86C9-D3AE28115DCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieLand.BLL.Tests", "MovieLand.BLL.Tests\MovieLand.BLL.Tests.csproj", "{DE84DFC9-ADF0-451E-ADB8-EBD5FB1CE395}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3416E534-4D08-4F95-86C9-D3AE28115DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE84DFC9-ADF0-451E-ADB8-EBD5FB1CE395}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE84DFC9-ADF0-451E-ADB8-EBD5FB1CE395}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE84DFC9-ADF0-451E-ADB8-EBD5FB1CE395}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE84DFC9-ADF0-451E-ADB8-EBD5FB1CE395}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
