@@ -188,9 +188,6 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id) {
             try {
                 var movie = await _unitOfWork.Movies.GetFullByIdAsync(id);
-                if (movie == null)
-                    throw new Exception($"Movie with Id {id} was not found");
-
                 var movieDto = _mapper.Map<MovieDto>(movie);
                 return OperationDetails<MovieDto>.Success(movieDto);
             }
@@ -241,8 +238,8 @@ namespace MovieLand.BLL.Services
                 var isExists = await _unitOfWork.Movies.IsInGenreAsync(movieId, genreId);
                 if(!isExists) {
                     await _unitOfWork.Movies.AddToGenreAsync(new MovieGenre() { MovieId = movieId, GenreId = genreId });
+                    await _unitOfWork.CompleteAsync();
                 }
-                await _unitOfWork.CompleteAsync();
                 return OperationDetails<bool>.Success(true);
             }
             catch(Exception ex) {
@@ -271,8 +268,8 @@ namespace MovieLand.BLL.Services
                 var isExists = await _unitOfWork.Movies.IsInCountryAsync(movieId, countryId);
                 if (!isExists) {
                     await _unitOfWork.Movies.AddToCountryAsync(new MovieCountry() { MovieId = movieId, CountryId = countryId });
+                    await _unitOfWork.CompleteAsync();
                 }
-                await _unitOfWork.CompleteAsync();
                 return OperationDetails<bool>.Success(true);
             }
             catch (Exception ex) {
@@ -298,11 +295,6 @@ namespace MovieLand.BLL.Services
         // Add artist to movie
         public async Task<OperationDetails<bool>> SaveArtistAsync(Guid movieId, MovieArtistDto artist) {
             try {
-                // Find movie
-                var movie = await _unitOfWork.Movies.GetByIdAsync(movieId);
-                if (movie == null)
-                    throw new Exception($"Movie with Id {movieId} was not found");
-
                 // Find movie artist
                 MovieArtist movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareerAsync(movieId, artist.ArtistId, artist.CareerId);
                 // If not exists
@@ -331,12 +323,10 @@ namespace MovieLand.BLL.Services
         public async Task<OperationDetails<bool>> RemoveArtistAsync(Guid movieId, MovieArtistDto artist) {
             try {
                 var movieArtist = await _unitOfWork.Movies.GetByMovieAndArtistAndCareerAsync(movieId, artist.ArtistId, artist.CareerId);
-
-                if (movieArtist == null)
-                    throw new Exception($"Artist {artist.ArtistId} as {artist.CareerId.ToString()} in movie {movieId} was not found");
-
-                _unitOfWork.Movies.RemoveFromArtistAndCareer(movieArtist);
-                await _unitOfWork.CompleteAsync();
+                if (movieArtist != null) {
+                    _unitOfWork.Movies.RemoveFromArtistAndCareer(movieArtist);
+                    await _unitOfWork.CompleteAsync();
+                }
                 return OperationDetails<bool>.Success(true);
             }
             catch (Exception ex) {

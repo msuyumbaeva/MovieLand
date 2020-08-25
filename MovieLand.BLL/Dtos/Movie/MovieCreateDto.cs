@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MovieLand.BLL.Dtos.Movie
 {
-    public class MovieCreateDto
+    public class MovieCreateDto  
     {
         public Guid Id { get; set; }
 
