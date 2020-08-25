@@ -182,7 +182,7 @@ namespace MovieLand.BLL.Tests.Services
             var mockUOW = new Mock<IUnitOfWork>();
             mockUOW
                 .Setup(x => x.Artists.GetByIdAsync(It.IsAny<Guid>()))
-                .ReturnsAsync(_testArtists[0]);
+                .ReturnsAsync((Guid id) => _testArtists.Where(a=>a.Id == id).FirstOrDefault());
 
             _sut = new ArtistService(_mapper, mockUOW.Object);
 
@@ -201,7 +201,7 @@ namespace MovieLand.BLL.Tests.Services
             var mockUOW = new Mock<IUnitOfWork>();
             mockUOW
                 .Setup(x => x.Artists.GetByIdAsync(It.IsAny<Guid>()))
-                .ReturnsAsync((Artist)null);
+                .ReturnsAsync((Guid id) => _testArtists.Where(a => a.Id == id).FirstOrDefault());
 
             _sut = new ArtistService(_mapper, mockUOW.Object);
 
@@ -329,7 +329,7 @@ namespace MovieLand.BLL.Tests.Services
         }
 
         [Test]
-        public async Task GetAsync_NullDataTableParameters_ArgumentNullException()
+        public async Task GetAsync_NullDataTableParameters_ArgumentNullExceptionError()
         {
             // Arrange
             var mockUOW = new Mock<IUnitOfWork>();
