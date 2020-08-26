@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
@@ -25,15 +26,15 @@ namespace MovieLand.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MoviesController : ControllerBase
+    public class MoviesController : LoggingController<MoviesController>
     {
         private readonly IMovieService _movieService;
         private readonly ICommentService _commentService;
         private readonly IStarRatingService _starRatingService;
         private readonly IFileClient _fileClient;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
-
-        public MoviesController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration) {
+        
+        public MoviesController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration, ILogger<MoviesController> logger) : base(logger) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
             _starRatingService = starRatingService ?? throw new ArgumentNullException(nameof(starRatingService));
@@ -74,6 +75,8 @@ namespace MovieLand.Api.Controllers
                     new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
+
+            LogErrors(result.Errors);
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
@@ -81,11 +84,19 @@ namespace MovieLand.Api.Controllers
         [HttpGet("{id}", Name = nameof(GetMovie))]
         [TypeFilter(typeof(HyperMediaFilter))]
         public async Task<IActionResult> GetMovie(Guid id) {
+            _logger.LogInformation("Get movie with id: {0}", id);
             var movieResult = await _movieService.GetByIdAsync(id);
-            if (movieResult.Entity == null)
+
+            if (!movieResult.IsSuccess) {
+                LogErrors(movieResult.Errors);
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
+            }
+
+            if (movieResult.Entity == null) {
+                _logger.LogWarning("Movie with id: {0} was not found", id);
                 return NotFound();
-            else
-                return Ok(new HyperMediaLinksDecorator<MovieDto>(movieResult.Entity));
+            }
+            return Ok(new HyperMediaLinksDecorator<MovieDto>(movieResult.Entity));
         }
         #endregion Movie endpoints
 
@@ -95,15 +106,28 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]", Name = nameof(GetMoviePoster))]
         [ActionName("Poster")]
         public async Task<IActionResult> GetMoviePoster(Guid id) {
+            _logger.LogInformation("Get movie with id: {0}", id);
             var movieResult = await _movieService.GetByIdAsync(id);
-            if (!movieResult.IsSuccess)
+
+            if (!movieResult.IsSuccess) {
+                LogErrors(movieResult.Errors);
                 return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
+            }
 
-            if (movieResult.Entity == null)
+            if (movieResult.Entity == null) {
+                _logger.LogWarning("Movie with id: {0} was not found", id);
                 return NotFound();
+            }
 
-            var fileStream = _fileClient.GetFile(_fileConfiguration.Directory, movieResult.Entity.Poster);
-            return File(fileStream, "image/jpeg");
+            try {
+                _logger.LogInformation("File client - Get file: {0}", movieResult.Entity.Poster);
+                var fileStream = _fileClient.GetFile(_fileConfiguration.Directory, movieResult.Entity.Poster);
+                return File(fileStream, "image/jpeg");
+            }
+            catch(Exception ex) {
+                _logger.LogError(ex.Message);
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
         }
         #endregion Poster endpoints
 
@@ -119,6 +143,8 @@ namespace MovieLand.Api.Controllers
                 Start = pagination.Offset,
                 Length = pagination.Limit
             };
+
+            _logger.LogInformation("Get comments of movie with id: {0}", id);
             var result = await _commentService.GetByMovieIdAsync(id, param);
             if (result.IsSuccess) {
                 return Ok(new ResultSet<CommentDto>(
@@ -126,6 +152,8 @@ namespace MovieLand.Api.Controllers
                     new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
+
+            LogErrors(result.Errors);
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
@@ -135,10 +163,13 @@ namespace MovieLand.Api.Controllers
         [ActionName("Comments")]
         [Authorize(Roles = "USER")]
         public async Task<IActionResult> PostMovieComment(Guid id, [FromBody] CommentCreateRequest request) {
+            _logger.LogInformation("Create comment to movie with id: {0}", id);
             if (ModelState.IsValid) {
                 var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (userId == null)
+                if (userId == null) {
+                    _logger.LogError("NameIdentifier claim was not found");
                     return StatusCode((int)HttpStatusCode.Forbidden);
+                }
 
                 var commentDto = new CommentDto() {
                     MovieId = id,
@@ -146,11 +177,15 @@ namespace MovieLand.Api.Controllers
                     User = userId
                 };
                 var result = await _commentService.CreateAsync(commentDto);
+
                 if (!result.IsSuccess) {
+                    LogErrors(result.Errors);
                     return BadRequest(new { result.Errors });
                 }
+
                 return StatusCode((int)HttpStatusCode.Created);
             }
+            _logger.LogWarning("Validation failed");
             return BadRequest();
         }
         #endregion Comments endpoints
@@ -162,10 +197,13 @@ namespace MovieLand.Api.Controllers
         [ActionName("StarRating")]
         [Authorize(Roles = "USER")]
         public async Task<IActionResult> PostMovieStarRating(Guid id, [FromBody] StarRatingCreateRequest request) {
+            _logger.LogInformation("Create star rating to movie with id: {0}", id);
             if (ModelState.IsValid) {
                 var userId = User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (userId == null)
+                if (userId == null) {
+                    _logger.LogError("NameIdentifier claim was not found");
                     return StatusCode((int)HttpStatusCode.Forbidden);
+                }
 
                 var ratingDto = new StarRatingDto() {
                     MovieId = id,
@@ -173,11 +211,14 @@ namespace MovieLand.Api.Controllers
                     User = userId
                 };
                 var result = await _starRatingService.SaveAsync(ratingDto);
+
                 if (!result.IsSuccess) {
+                    LogErrors(result.Errors);
                     return BadRequest(new { result.Errors });
                 }
                 return StatusCode((int)HttpStatusCode.Created);
             }
+            _logger.LogWarning("Validation failed");
             return BadRequest();
         }
 
@@ -186,8 +227,10 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]", Name = nameof(GetMovieStarRating))]
         [ActionName("StarRating")]
         public async Task<IActionResult> GetMovieStarRating(Guid id) {
+            _logger.LogInformation("Get star rating of movie with id: {0}", id);
             var result = await _starRatingService.GetAverageRatingOfMovieAsync(id);
             if (!result.IsSuccess) {
+                LogErrors(result.Errors);
                 return BadRequest(new { result.Errors });
             }
             return Ok(new { Value = result.Entity });

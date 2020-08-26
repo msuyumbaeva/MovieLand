@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.Api.Models.Movie;
@@ -28,7 +29,7 @@ namespace MovieLand.Api.Controllers
     [Route("api/movies")]
     [ApiController]
     [Authorize(Roles = "ADMIN")]
-    public class AdminMoviesController : ControllerBase
+    public class AdminMoviesController : LoggingController<AdminMoviesController>
     {
         private readonly IMovieService _movieService;
         private readonly IGenreService _genreService;
@@ -38,7 +39,7 @@ namespace MovieLand.Api.Controllers
         private readonly IMapper _mapper;
         private static readonly HttpClient HttpClient = new HttpClient();
 
-        public AdminMoviesController(IMovieService movieService, IGenreService genreService, ICountryService countryService, IArtistService artistService, MovieSourceOptions movieSourceOptions, IMapper mapper) {
+        public AdminMoviesController(IMovieService movieService, IGenreService genreService, ICountryService countryService, IArtistService artistService, MovieSourceOptions movieSourceOptions, IMapper mapper, ILogger<AdminMoviesController> logger): base(logger) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _genreService = genreService ?? throw new ArgumentNullException(nameof(genreService));
             _countryService = countryService ?? throw new ArgumentNullException(nameof(countryService));
@@ -53,13 +54,21 @@ namespace MovieLand.Api.Controllers
         [HttpPost(Name = nameof(PostMovie))]
         [TypeFilter(typeof(HyperMediaFilter))]
         public async Task<IActionResult> PostMovie([FromForm] MovieCreateDto createDto) {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Creating movie: {0}", createDto.Name);
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed");
                 return BadRequest();
+            }
 
+            _logger.LogInformation("Creating movie");
             var result = await _movieService.SaveAsync(createDto);
-            if (!result.IsSuccess)
-                return BadRequest(new { result.Errors });
 
+            if (!result.IsSuccess) {
+                LogErrors(result.Errors);
+                return BadRequest(new { result.Errors });
+            }
+
+            _logger.LogInformation("Created successfully");
             var response = new HyperMediaLinksDecorator<MovieDto>(result.Entity);
             EnrichMovieDtoResponse(response);
             return StatusCode((int)HttpStatusCode.Created, response);
@@ -69,16 +78,21 @@ namespace MovieLand.Api.Controllers
         [Route("[action]", Name = nameof(GetMoviesFromExternalSource))]
         [ActionName("External")]
         public async Task<IActionResult> GetMoviesFromExternalSource([FromQuery] MovieSourceRequest request, int page = 1) {
+            _logger.LogInformation("Get movie from external source: {0}", request.Source);
+
             // Find source from list
             var source = _movieSourceOptions.MovieSourcesList.FirstOrDefault(m => m.Name == request.Source);
-            if (source == null)
+            if (source == null) {
+                _logger.LogWarning("Source {0} was not found", request.Source);
                 return BadRequest("Source was not found");
+            }
             try {
                 // Get movies from source
                 var movies = await source.SearchMovieAsync(HttpClient, request.Value, page);
                 return Ok(movies);
             }
             catch (Exception ex) {
+                _logger.LogError(ex.Message);
                 return BadRequest(new { errors = new string[] { ex.Message } });
             }
         }
@@ -88,18 +102,24 @@ namespace MovieLand.Api.Controllers
         [ActionName("External")]
         [TypeFilter(typeof(HyperMediaFilter))]
         public async Task<IActionResult> PostMovieFromExternalSource([FromBody] MovieSourceRequest request) {
+            _logger.LogInformation("Creating movie from external source: {0}", request.Source);
+
             // Find source from list
             var source = _movieSourceOptions.MovieSourcesList.FirstOrDefault(m => m.Name == request.Source);
-            if (source == null)
+            if (source == null) {
+                _logger.LogWarning("Source {0} was not found", request.Source);
                 return BadRequest("Source was not found");
+            }
 
             try {
                 // Get movie from source
+                _logger.LogInformation("Get movie request");
                 var movieSourceDto = await source.GetMovieAsync(HttpClient, request.Value);
 
                 // Map movie from source to MovieCreateDto object
                 var createDto = _mapper.Map<MovieCreateDto>(movieSourceDto);
                 // Save movie to db
+                _logger.LogInformation("Save movie to database");
                 var movieResult = await _movieService.SaveAsync(createDto);
                 if (!movieResult.IsSuccess)
                     throw new Exception(movieResult.Errors.First());
@@ -108,6 +128,7 @@ namespace MovieLand.Api.Controllers
                 var createdMovie = movieResult.Entity;
 
                 // Set movie genres
+                _logger.LogInformation("Save movie genres");
                 foreach(var genreName in movieSourceDto.Genres) {
                     // Get or create genre 
                     var genreResult = await _genreService.SaveAsync(new GenreDto() { Name = genreName });
@@ -123,6 +144,7 @@ namespace MovieLand.Api.Controllers
                 }
 
                 // Set movie countries
+                _logger.LogInformation("Save movie countries");
                 foreach (var countryName in movieSourceDto.Countries) {
                     // Get or create country
                     var countryResult = await _countryService.SaveAsync(new CountryDto() { Name = countryName });
@@ -138,6 +160,7 @@ namespace MovieLand.Api.Controllers
                 }
 
                 // Set movie directors
+                _logger.LogInformation("Save movie directors");
                 byte priority = 1;
                 foreach (var directorsName in movieSourceDto.Directors) {
                     // Get or create artist
@@ -155,6 +178,7 @@ namespace MovieLand.Api.Controllers
                 }
 
                 // Set movie actors
+                _logger.LogInformation("Save movie actors");
                 priority = 1;
                 foreach (var actorsName in movieSourceDto.Actors) {
                     // Get or create artist
@@ -177,6 +201,7 @@ namespace MovieLand.Api.Controllers
                 return StatusCode((int)HttpStatusCode.Created, response);
             }
             catch (Exception ex) {
+                _logger.LogError(ex.Message);
                 return BadRequest(new { errors = new string[] { ex.Message } });
             }
         }
