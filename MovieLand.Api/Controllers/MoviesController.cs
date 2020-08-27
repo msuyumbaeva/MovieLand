@@ -26,20 +26,22 @@ namespace MovieLand.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MoviesController : LoggingController<MoviesController>
+    public class MoviesController : ControllerBase
     {
         private readonly IMovieService _movieService;
         private readonly ICommentService _commentService;
         private readonly IStarRatingService _starRatingService;
         private readonly IFileClient _fileClient;
         private readonly MoviePosterFileConfiguration _fileConfiguration;
+        private readonly ILogger<MoviesController> _logger;
         
-        public MoviesController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration, ILogger<MoviesController> logger) : base(logger) {
+        public MoviesController(IMovieService movieService, ICommentService commentService, IStarRatingService starRatingService, IFileClient fileClient, IOptions<MoviePosterFileConfiguration> fileConfiguration, ILogger<MoviesController> logger) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
             _starRatingService = starRatingService ?? throw new ArgumentNullException(nameof(starRatingService));
             _fileClient = fileClient ?? throw new ArgumentNullException(nameof(fileClient));
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
 
@@ -76,7 +78,7 @@ namespace MovieLand.Api.Controllers
                 ));
             }
 
-            LogErrors(result.Errors);
+            _logger.LogError(result.Errors);
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
@@ -88,7 +90,7 @@ namespace MovieLand.Api.Controllers
             var movieResult = await _movieService.GetByIdAsync(id);
 
             if (!movieResult.IsSuccess) {
-                LogErrors(movieResult.Errors);
+                _logger.LogError(movieResult.Errors);
                 return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
             }
 
@@ -110,7 +112,7 @@ namespace MovieLand.Api.Controllers
             var movieResult = await _movieService.GetByIdAsync(id);
 
             if (!movieResult.IsSuccess) {
-                LogErrors(movieResult.Errors);
+                _logger.LogError(movieResult.Errors);
                 return StatusCode((int)HttpStatusCode.InternalServerError, new { movieResult.Errors });
             }
 
@@ -153,7 +155,7 @@ namespace MovieLand.Api.Controllers
                 ));
             }
 
-            LogErrors(result.Errors);
+            _logger.LogError(result.Errors);
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
@@ -179,7 +181,7 @@ namespace MovieLand.Api.Controllers
                 var result = await _commentService.CreateAsync(commentDto);
 
                 if (!result.IsSuccess) {
-                    LogErrors(result.Errors);
+                    _logger.LogError(result.Errors);
                     return BadRequest(new { result.Errors });
                 }
 
@@ -213,7 +215,7 @@ namespace MovieLand.Api.Controllers
                 var result = await _starRatingService.SaveAsync(ratingDto);
 
                 if (!result.IsSuccess) {
-                    LogErrors(result.Errors);
+                    _logger.LogError(result.Errors);
                     return BadRequest(new { result.Errors });
                 }
                 return StatusCode((int)HttpStatusCode.Created);
@@ -230,7 +232,7 @@ namespace MovieLand.Api.Controllers
             _logger.LogInformation("Get star rating of movie with id: {0}", id);
             var result = await _starRatingService.GetAverageRatingOfMovieAsync(id);
             if (!result.IsSuccess) {
-                LogErrors(result.Errors);
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
             }
             return Ok(new { Value = result.Entity });

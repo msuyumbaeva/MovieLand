@@ -29,7 +29,7 @@ namespace MovieLand.Api.Controllers
     [Route("api/movies")]
     [ApiController]
     [Authorize(Roles = "ADMIN")]
-    public class AdminMoviesController : LoggingController<AdminMoviesController>
+    public class AdminMoviesController : ControllerBase
     {
         private readonly IMovieService _movieService;
         private readonly IGenreService _genreService;
@@ -38,14 +38,16 @@ namespace MovieLand.Api.Controllers
         private readonly MovieSourceOptions _movieSourceOptions;
         private readonly IMapper _mapper;
         private static readonly HttpClient HttpClient = new HttpClient();
+        private readonly ILogger<AdminMoviesController> _logger;
 
-        public AdminMoviesController(IMovieService movieService, IGenreService genreService, ICountryService countryService, IArtistService artistService, MovieSourceOptions movieSourceOptions, IMapper mapper, ILogger<AdminMoviesController> logger): base(logger) {
+        public AdminMoviesController(IMovieService movieService, IGenreService genreService, ICountryService countryService, IArtistService artistService, MovieSourceOptions movieSourceOptions, IMapper mapper, ILogger<AdminMoviesController> logger) {
             _movieService = movieService ?? throw new ArgumentNullException(nameof(movieService));
             _genreService = genreService ?? throw new ArgumentNullException(nameof(genreService));
             _countryService = countryService ?? throw new ArgumentNullException(nameof(countryService));
             _artistService = artistService ?? throw new ArgumentNullException(nameof(artistService));
             _movieSourceOptions = movieSourceOptions ?? throw new ArgumentNullException(nameof(movieSourceOptions));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         #region Movies endpoints
@@ -56,7 +58,7 @@ namespace MovieLand.Api.Controllers
         public async Task<IActionResult> PostMovie([FromForm] MovieCreateDto createDto) {
             _logger.LogInformation("Creating movie: {0}", createDto.Name);
             if (!ModelState.IsValid) {
-                _logger.LogWarning("Validation failed");
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
             }
 
@@ -64,7 +66,7 @@ namespace MovieLand.Api.Controllers
             var result = await _movieService.SaveAsync(createDto);
 
             if (!result.IsSuccess) {
-                LogErrors(result.Errors);
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
             }
 
@@ -215,12 +217,17 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]", Name = nameof(PostMovieGenre))]
         [ActionName("Genres")]
         public async Task<IActionResult> PostMovieGenre(Guid id, [FromBody] MovieGenreRequest request) {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Adding genre {0} to movie {1}", request.GenreId, id);
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _movieService.AddGenreAsync(id, request.GenreId);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
 
             var response = new LinkedResourceDto();
             EnrichMovieGenreResponse(id, request.GenreId, response);
@@ -232,9 +239,12 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]/{genreId}", Name = nameof(DeleteMovieGenre))]
         [ActionName("Genres")]
         public async Task<IActionResult> DeleteMovieGenre(Guid id, Guid genreId) {
+            _logger.LogInformation("Deleting genre {0} from movie {1}", genreId, id);
             var result = await _movieService.RemoveGenreAsync(id, genreId);
-            if (!result.IsSuccess)
-                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
+                return BadRequest(new { result.Errors });
+            }
             return NoContent();
         }
 
@@ -247,12 +257,17 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]", Name = nameof(PostMovieCountry))]
         [ActionName("Countries")]
         public async Task<IActionResult> PostMovieCountry(Guid id, [FromBody] MovieCountryRequest request) {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Adding country {0} to movie {1}", request.CountryId, id);
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _movieService.AddCountryAsync(id, request.CountryId);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
 
             var response = new LinkedResourceDto();
             EnrichMovieCountryResponse(id, request.CountryId, response);
@@ -264,9 +279,12 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]/{countryId}", Name = nameof(DeleteMovieCountry))]
         [ActionName("Countries")]
         public async Task<IActionResult> DeleteMovieCountry(Guid id, Guid countryId) {
+            _logger.LogInformation("Deleting country {0} from movie {1}", countryId, id);
             var result = await _movieService.RemoveCountryAsync(id, countryId);
-            if (!result.IsSuccess)
-                Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
+                return BadRequest(new { result.Errors });
+            }
             return NoContent();
         }
 
@@ -279,12 +297,18 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]", Name = nameof(PostMovieArtist))]
         [ActionName("Artists")]
         public async Task<IActionResult> PostMovieArtist(Guid id, [FromBody] MovieArtistDto request) {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Adding artist {0} to movie {1}", request, id);
+
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _movieService.SaveArtistAsync(id, request);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
 
             var response = new LinkedResourceDto();
             EnrichMovieArtistResponse(id, request.ArtistId, response);
@@ -296,12 +320,18 @@ namespace MovieLand.Api.Controllers
         [Route("{id}/[action]/{artistId}", Name = nameof(DeleteMovieArtist))]
         [ActionName("Artists")]
         public async Task<IActionResult> DeleteMovieArtist(Guid id, Guid artistId, [FromBody] MovieArtistDto request) {
-            if (artistId != request.ArtistId)
+            _logger.LogInformation("Deleting artist {0} from movie {1}", request, id);
+
+            if (artistId != request.ArtistId) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _movieService.RemoveArtistAsync(id, request);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
 
             return NoContent();
         }
