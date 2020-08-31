@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+using GraphQL;
+using GraphQL.Server;
+using GraphQL.Server.Ui.Playground;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using MovieLand.Api.GraphQL.GraphQLSchema;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.Api.Models.MovieSources;
@@ -134,6 +138,11 @@ namespace MovieLand.Api
             var movieSourceOptions = new MovieSourceOptions();
             movieSourceOptions.MovieSourcesList.Add(new OmdbSource(mapper, omdbConfig));
             services.AddSingleton(movieSourceOptions);
+
+            services.AddScoped<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
+            services.AddScoped<AppSchema>();
+            services.AddGraphQL(o => { o.ExposeExceptions = false; })
+                .AddGraphTypes(ServiceLifetime.Scoped);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -141,6 +150,10 @@ namespace MovieLand.Api
             app.UseCors("default");
             app.UseAuthentication();
             app.UseStaticFiles();
+
+            app.UseGraphQL<AppSchema>();
+            app.UseGraphQLPlayground(options: new GraphQLPlaygroundOptions());
+
             app.UseMvcWithDefaultRoute();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
