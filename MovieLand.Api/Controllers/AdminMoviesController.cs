@@ -62,7 +62,7 @@ namespace MovieLand.Api.Controllers
                 return BadRequest();
             }
 
-            _logger.LogInformation("Creating movie");
+            _logger.LogInformation("Saving movie to database");
             var result = await _movieService.SaveAsync(createDto);
 
             if (!result.IsSuccess) {

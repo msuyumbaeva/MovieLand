@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MovieLand.Api.HyperMedia;
 using MovieLand.Api.Models;
 using MovieLand.BLL.Contracts;
@@ -22,9 +23,11 @@ namespace MovieLand.Api.Controllers
     public class GenresController : ControllerBase
     {
         private readonly IGenreService _genreService;
+        private readonly ILogger<GenresController> _logger;
 
-        public GenresController(IGenreService genreService) {
+        public GenresController(IGenreService genreService, ILogger<GenresController> logger) {
             _genreService = genreService ?? throw new ArgumentNullException(nameof(genreService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         // GET: api/Genres
@@ -55,6 +58,8 @@ namespace MovieLand.Api.Controllers
                     new ResultSetMethadata(result.Entity.TotalSize, pagination.Limit, pagination.Offset)
                 ));
             }
+
+            _logger.LogError(result.Errors);
             return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
         }
 
@@ -63,9 +68,18 @@ namespace MovieLand.Api.Controllers
         [TypeFilter(typeof(HyperMediaFilter))]
         public async Task<IActionResult> GetGenre(Guid id)
         {
+            _logger.LogInformation("Get genre with id: {0}", id);
             var result = await _genreService.GetByIdAsync(id);
-            if (result.Entity == null)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { result.Errors });
+            }
+
+            if (result.Entity == null) {
+                _logger.LogWarning("Genre with id: {0} was not found", id);
                 return NotFound();
+            }
+
             return Ok(new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
 
@@ -75,15 +89,22 @@ namespace MovieLand.Api.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> PutGenre(Guid id, GenreDto genreDto)
         {
-            if (id != genreDto.Id)
+            _logger.LogInformation("Updating genre with id: {0}", id);
+            if (id != genreDto.Id) {
+                _logger.LogWarning("{id} and {genreDto.Id} don't match", id, genreDto.Id);
                 return BadRequest();
+            }
 
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _genreService.SaveAsync(genreDto);
-            if(!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
             return Ok(new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
 
@@ -93,12 +114,17 @@ namespace MovieLand.Api.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> PostGenre(GenreDto genreDto)
         {
-            if (!ModelState.IsValid)
+            _logger.LogInformation("Creating genre: {genreName}", genreDto.Name);
+            if (!ModelState.IsValid) {
+                _logger.LogWarning("Validation failed: {0}", ModelState);
                 return BadRequest();
+            }
 
             var result = await _genreService.SaveAsync(genreDto);
-            if (!result.IsSuccess)
+            if (!result.IsSuccess) {
+                _logger.LogError(result.Errors);
                 return BadRequest(new { result.Errors });
+            }
 
             return StatusCode((int)HttpStatusCode.Created, new HyperMediaLinksDecorator<GenreDto>(result.Entity));
         }
