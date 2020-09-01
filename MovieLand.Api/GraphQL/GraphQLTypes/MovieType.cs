@@ -1,10 +1,10 @@
 ﻿using GraphQL.Types;
+using MovieLand.BLL.Dtos.Movie;
 using MovieLand.Data.Contracts.Repositories;
-using MovieLand.Data.Models;
 
 namespace MovieLand.Api.GraphQL.GraphQLTypes
 {
-    public class MovieType : ObjectGraphType<Movie>
+    public class MovieType : ObjectGraphType<MovieDto>
     {
         public MovieType(IUnitOfWork unitOfWork) {
             Field(x=>x.Id, type: typeof(IdGraphType)).Description("Id property from the movie object.");

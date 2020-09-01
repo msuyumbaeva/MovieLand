@@ -184,6 +184,84 @@ namespace MovieLand.BLL.Services
             }
         }
 
+        public async Task<OperationDetails<IEnumerable<MovieDto>>> GetAllAsync(MovieDataTablesParameters table) {
+            try {
+                if (table == null)
+                    throw new ArgumentNullException(nameof(table));
+
+                MovieDto[] items = null;
+                // Get total size
+                var size = await _unitOfWork.Movies.CountAsync();
+
+                /// Query building
+                var queryBuilder = new EntityQueryBuilder<Movie>();
+
+                // Filter
+                Expression<Func<Movie, bool>> filter = m => true;
+                // Genre
+                if (table.Genre.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieGenres.Count(mg => mg.GenreId == table.Genre.Value) > 0);
+                // Country
+                if (table.Country.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieCountries.Count(mg => mg.CountryId == table.Country.Value) > 0);
+                // Artist
+                if (table.Artist.HasValue)
+                    filter = filter.CombineWithAndAlso(m => m.MovieArtists.Count(mg => mg.ArtistId == table.Artist.Value) > 0);
+                // Search
+                if (!string.IsNullOrEmpty(table.Search?.Value))
+                    filter = filter.CombineWithAndAlso(m => m.Name.Contains(table.Search.Value) || m.OriginalName.Contains(table.Search.Value) || m.ReleaseYear.ToString() == table.Search.Value);
+
+                queryBuilder.SetFilter(filter);
+                // Order
+                var order = table.Order?[0];
+                Expression<Func<Movie, object>> orderProperty = null;
+
+                // Order property
+                if (table.SortOrder == "Name")
+                    orderProperty = m => m.Name;
+                else if (table.SortOrder == "ReleaseYear")
+                    orderProperty = m => m.ReleaseYear;
+
+                if (orderProperty != null && order != null) {
+                    // Order direction
+                    if (order.Dir == DTOrderDir.ASC)
+                        queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
+                    else
+                        queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+                }
+
+                // Limit
+                queryBuilder.SetLimit(table.Length);
+
+                if (table.Length > 0) {
+                    // Offset
+                    queryBuilder.SetOffset((table.Start / table.Length) * table.Length);
+                }
+                /// End Query building
+
+                // Get movies
+                var movies = await _unitOfWork.Movies.GetAsync(queryBuilder);
+                // Map to dto
+                items = _mapper.Map<MovieDto[]>(movies);
+
+                return OperationDetails<IEnumerable<MovieDto>>.Success(items);
+            }
+            catch (Exception ex) {
+                return OperationDetails<IEnumerable<MovieDto>>.Failure().AddError(ex.Message);
+            }
+        }
+
+        public async Task<OperationDetails<MovieDto>> GetLightByIdAsync(Guid id) {
+            try {
+                var movie = await _unitOfWork.Movies.GetByIdAsync(id);
+                var movieDto = _mapper.Map<MovieDto>(movie);
+                return OperationDetails<MovieDto>.Success(movieDto);
+            }
+            catch (Exception ex) {
+                return OperationDetails<MovieDto>.Failure().AddError(ex.Message);
+            }
+        }
+
         // Get movie by Id
         public async Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id) {
             try {

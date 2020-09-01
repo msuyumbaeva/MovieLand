@@ -27,7 +27,9 @@ namespace MovieLand.BLL.Contracts
         Task<OperationDetails<bool>> RemoveArtistAsync(Guid movieId, MovieArtistDto artist);
 
         Task<OperationDetails<DataTablesPagedResults<MovieListItemDto>>> GetAsync(MovieDataTablesParameters table);
+        Task<OperationDetails<IEnumerable<MovieDto>>> GetAllAsync(MovieDataTablesParameters table);
         Task<OperationDetails<MovieDto>> GetByIdAsync(Guid id);
+        Task<OperationDetails<MovieDto>> GetLightByIdAsync(Guid id);
 
         Task<OperationDetails<IEnumerable<GenreDto>>> GetGenresOfMovieAsync(Guid movieId);
         Task<OperationDetails<IEnumerable<CountryDto>>> GetCountriesOfMovieAsync(Guid movieId);

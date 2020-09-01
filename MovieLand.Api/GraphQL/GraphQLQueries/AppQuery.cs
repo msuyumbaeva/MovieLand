@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
+using GraphQL;
 using GraphQL.Types;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 using MovieLand.Api.GraphQL.GraphQLTypes;
 using MovieLand.BLL.Contracts;
 using MovieLand.BLL.Dtos.DataTables;
+using MovieLand.BLL.Dtos.Movie;
 using MovieLand.BLL.Extensions;
 using MovieLand.Data.Builders;
 using MovieLand.Data.Contracts.Repositories;
@@ -17,12 +21,11 @@ namespace MovieLand.Api.GraphQL.GraphQLQueries
 {
     public class AppQuery : ObjectGraphType
     { 
-        public AppQuery(IUnitOfWork unitOfWork) {
+        public AppQuery(IMovieService movieService) {
             Field<ListGraphType<MovieType>>(
                "movies",
                arguments: new QueryArguments(
-                   new QueryArgument<StringGraphType> { Name = "name" },
-                   new QueryArgument<StringGraphType> { Name = "releaseYear" },
+                   new QueryArgument<StringGraphType> { Name = "search" },
                    new QueryArgument<StringGraphType> { Name = "genre" },
                    new QueryArgument<StringGraphType> { Name = "country" },
                    new QueryArgument<StringGraphType> { Name = "artist" },
@@ -31,13 +34,18 @@ namespace MovieLand.Api.GraphQL.GraphQLQueries
                    new QueryArgument<StringGraphType> { Name = "order", DefaultValue = "Name" },
                    new QueryArgument<BooleanGraphType> { Name = "orderAsc", DefaultValue = true }
                ),
-               resolve: context => ResolveMovies(context, unitOfWork)
-           );
+               resolve: context => ResolveMovies(context, movieService)
+            );
+
+            Field<MovieType>(
+                "movie",
+                arguments: new QueryArguments(new QueryArgument<NonNullGraphType<IdGraphType>> { Name = "movieId" }),
+                resolve: context => ResolveMovie(context, movieService)
+            );
         }
 
-        private IEnumerable<Movie> ResolveMovies(ResolveFieldContext<object> context, IUnitOfWork unitOfWork) {
-            var name = context.GetArgument<string>("name");
-            var year = context.GetArgument<string>("releaseYear");
+        private IEnumerable<MovieDto> ResolveMovies(ResolveFieldContext<object> context, IMovieService movieService) {
+            var search = context.GetArgument<string>("search");
             var genre = context.GetArgument<string>("genre");
             var country = context.GetArgument<string>("country");
             var artist = context.GetArgument<string>("artist");
@@ -46,54 +54,78 @@ namespace MovieLand.Api.GraphQL.GraphQLQueries
             var order = context.GetArgument<string>("order");
             var orderAsc = context.GetArgument<bool>("orderAsc");
 
-            // Query building
-            var queryBuilder = new EntityQueryBuilder<Movie>();
-
-            // Filter
-            Expression<Func<Movie, bool>> filter = m => true;
-            if (!string.IsNullOrEmpty(name))
-                filter = filter.CombineWithAndAlso(m => m.Name.Contains(name));
-
-            if (int.TryParse(year, out int intYear))
-                filter = filter.CombineWithAndAlso(m => m.ReleaseYear == intYear);
-
-            if (Guid.TryParse(genre, out Guid genreId))
-                filter = filter.CombineWithAndAlso(m => m.MovieGenres.Count(mg => mg.GenreId == genreId) > 0);
-
-            if (Guid.TryParse(country, out Guid countryId))
-                filter = filter.CombineWithAndAlso(m => m.MovieCountries.Count(mg => mg.CountryId == countryId) > 0);
-
-            if (Guid.TryParse(artist, out Guid artistId))
-                filter = filter.CombineWithAndAlso(m => m.MovieArtists.Count(mg => mg.ArtistId == artistId) > 0);
-
-            queryBuilder.SetFilter(filter);
-
-            // Order
-            Expression<Func<Movie, object>> orderProperty = null;
-
-            // Order property
-            if (order == "Name")
-                orderProperty = m => m.Name;
-            else if (order == "ReleaseYear")
-                orderProperty = m => m.ReleaseYear;
-
-            if (orderProperty != null && order != null) {
-                // Order direction
-                if (orderAsc)
-                    queryBuilder.SetOrderBy(m => m.OrderBy(orderProperty));
-                else
-                    queryBuilder.SetOrderBy(m => m.OrderByDescending(orderProperty));
+            var genreId = Guid.Empty;
+            if (genre != null && !Guid.TryParse(genre, out genreId)) {
+                context.Errors.Add(new ExecutionError("Wrong value for genre (guid)"));
+                return null;
             }
 
-            // Limit
-            queryBuilder.SetLimit(limit);
-            // Offset
-            queryBuilder.SetOffset(offset);
+            var countryId = Guid.Empty;
+            if (country != null && !Guid.TryParse(country, out countryId)) {
+                context.Errors.Add(new ExecutionError("Wrong value for country (guid)"));
+                return null;
+            }
 
-            // End Query building
+            var artistId = Guid.Empty;
+            if (artist != null && !Guid.TryParse(artist, out artistId)) {
+                context.Errors.Add(new ExecutionError("Wrong value for artist (guid)"));
+                return null;
+            }
 
-            var movies = unitOfWork.Movies.GetAsync(queryBuilder).Result;
-            return movies;
+            var dtColumns = new DTColumn[] {
+                    new DTColumn() { Data = "Name", Name = "Name", Orderable = true, Searchable = true },
+                    new DTColumn() { Data = "ReleaseYear", Name = "ReleaseYear", Orderable = true, Searchable = true }
+                };
+
+            DTOrder dtOrder = new DTOrder() {
+                Column = 0,
+                Dir = orderAsc ? DTOrderDir.ASC : DTOrderDir.DESC
+            };
+
+            if (order == dtColumns[1].Name)
+                dtOrder.Column = 1;
+
+            var parameters = new MovieDataTablesParameters() {
+                Columns = dtColumns,
+                Order = new DTOrder[1] {
+                    dtOrder
+                },
+                Draw = 0,
+                Start = offset,
+                Length = limit,
+                Search = new DTSearch() {
+                    Value = search ?? "",
+                    Regex = false
+                },
+                Genre = genreId != Guid.Empty ? genreId : (Guid?)null,
+                Country = countryId != Guid.Empty ? countryId : (Guid?)null,
+                Artist = artistId != Guid.Empty ? artistId : (Guid?)null
+            };
+
+            var result = movieService.GetAllAsync(parameters).Result;
+            if (result.IsSuccess)
+                return result.Entity;
+            else {
+                context.Errors.Add(new ExecutionError(result.Errors[0]));
+                return null;
+            }
+
+        }
+
+        private MovieDto ResolveMovie(ResolveFieldContext<object> context, IMovieService movieService) {
+            if (!Guid.TryParse(context.GetArgument<string>("movieId"), out Guid id)) {
+                context.Errors.Add(new ExecutionError("Wrong value for guid"));
+                return null;
+            }
+
+            var result = movieService.GetLightByIdAsync(id).Result;
+
+            if (result.IsSuccess)
+                return result.Entity;
+            else {
+                context.Errors.Add(new ExecutionError(result.Errors[0]));
+                return null;
+            }
         }
     }
 }

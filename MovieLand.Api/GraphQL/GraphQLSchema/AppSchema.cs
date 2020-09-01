@@ -1,6 +1,7 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using MovieLand.Api.GraphQL.GraphQLQueries;
+using MovieLand.Api.GraphQL.GraphQLTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace MovieLand.Api.GraphQL.GraphQLSchema
         public AppSchema(IDependencyResolver resolver)
         : base(resolver) {
             Query = resolver.Resolve<AppQuery>();
+            Mutation = resolver.Resolve<AppMutation>();
+            RegisterValueConverter(new ByteValueConverter());
         }
     }
 }
