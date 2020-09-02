@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ using MovieLand.BLL.Dtos.DataTables;
 using MovieLand.BLL.Dtos.Genre;
 using MovieLand.BLL.Dtos.Movie;
 using MovieLand.BLL.Extensions;
+using MovieLand.BLL.Validators.Movie;
 using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Builders;
 using MovieLand.Data.Contracts.Repositories;
@@ -34,7 +36,7 @@ namespace MovieLand.BLL.Services
     {
         private readonly MoviePosterFileConfiguration _fileConfiguration;
         private readonly IFileClient _fileClient;
-        private readonly static string NO_MOVIE_POSTER_FILE_NAME = "no-movie-poster.jpg";
+        private readonly static string DEFAULT_MOVIE_POSTER_FILE_NAME = "no-movie-poster.jpg";
 
         public MovieService(IMapper mapper, IUnitOfWork unitOfWork, IOptions<MoviePosterFileConfiguration> fileConfiguration, IFileClient fileClient) :  base(mapper, unitOfWork){
             _fileConfiguration = fileConfiguration?.Value ?? throw new ArgumentNullException(nameof(fileConfiguration));
@@ -72,7 +74,11 @@ namespace MovieLand.BLL.Services
         // Create or Edit movie
         public async Task<OperationDetails<MovieDto>> SaveAsync(MovieCreateDto movieCreateDto) {
             try {
-                var posterFileName = NO_MOVIE_POSTER_FILE_NAME;
+                // Validate argument
+                var validator = new MovieCreateDtoValidator();
+                validator.ValidateAndThrow(movieCreateDto);
+
+                var posterFileName = DEFAULT_MOVIE_POSTER_FILE_NAME;
                 if (movieCreateDto.Poster != null) {
                     // Save poster
                     posterFileName = await SavePoster(movieCreateDto.Poster);

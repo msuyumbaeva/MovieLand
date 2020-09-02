@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using ExpectedObjects;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Options;
 using Moq;
 using MovieLand.BLL.Configurations;
@@ -402,6 +401,39 @@ namespace MovieLand.BLL.Tests.Services
             // Assert
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual(expectedException, result.Errors.First());
+        }
+
+        [Test]
+        public async Task SaveAsync_EmptyIdAndNameLengthMoreThan100_ValidationFailedError() {
+            // Arrange
+            var mockFileClient = new Mock<IFileClient>();
+            mockFileClient
+                .Setup(x => x.SaveFileAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Stream>()));
+
+            var mockFileConfigOptions = new Mock<IOptions<MoviePosterFileConfiguration>>();
+            mockFileConfigOptions
+                .SetupGet(x => x.Value)
+                .Returns(new MoviePosterFileConfiguration());
+
+            var mockUOW = new Mock<IUnitOfWork>();
+            _sut = new MovieService(_mapper, mockUOW.Object, mockFileConfigOptions.Object, mockFileClient.Object);
+
+            // Act
+            var request = new MovieCreateDto() {
+                Id = Guid.Empty,
+                Name = new string('a', 101),
+                ReleaseYear = 2020,
+                MinAge = 16,
+                Duration = 100,
+                Description = "Movie description",
+                Poster = null
+            };
+
+            var result = await _sut.SaveAsync(request);
+
+            // Assert
+            Assert.IsFalse(result.IsSuccess);
+            Assert.IsTrue(result.Errors[0].Contains("Validation failed"));
         }
 
         #endregion SaveAsync tests
