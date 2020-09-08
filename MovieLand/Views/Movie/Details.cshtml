@@ -14,7 +14,7 @@
             <img src="~/posters/@Model.Poster" width="300" height="450" />
         </div>
         <div class="col-sm-8">
-            <h1>@Html.DisplayFor(model => model.Name)</h1>
+            <h1 id="movie-name">@Html.DisplayFor(model => model.Name)</h1>
             <h5>@Html.DisplayFor(model => model.OriginalName) <span class="badge badge-primary">@Html.DisplayFor(model => model.MinAge)+</span> </h5>
             <dl class="row mt-5">
                 <dt class="col-sm-2">

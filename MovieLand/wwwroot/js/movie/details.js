@@ -1,6 +1,7 @@
 ﻿$(document).ready(async function () {
     // Get movie id from url
     const movieId = window.location.pathname.split('/').pop()
+    const movieName = $('#movie-name').text()
 
     // Setup datatable plugin for movie comments
     var table = $('#comments-table').DataTable({
@@ -69,6 +70,8 @@
             const value = e.stars;
             // Post request
             await postData(Urls.StarRating.Create, { movieId, value })
+            await SendRatingToHub(movieName, value)
+
             // Reload avg rate
             await loadRatingAverage(movieId)
         }

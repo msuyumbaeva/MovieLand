@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,7 @@ using MovieLand.Data.ApplicationDbContext;
 using MovieLand.Data.Contracts.Repositories;
 using MovieLand.Data.Models;
 using MovieLand.Data.Repositories;
+using MovieLand.Hubs;
 using MovieLand.Models;
 using Newtonsoft.Json.Serialization;
 
@@ -98,6 +100,9 @@ namespace MovieLand
             IMapper mapper = mappingConfig.CreateMapper();
             services.AddSingleton(mapper);
 
+            services.AddSignalR();
+            services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
             services.AddMvc()
                 .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver())
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -121,6 +126,10 @@ namespace MovieLand
             app.UseStaticFiles();
             app.UseCookiePolicy();
             app.UseAuthentication();
+
+            app.UseSignalR(options => 
+                options.MapHub<RatingHub>("/ratingHub")
+            );
 
             DataInitializer.SeedRoles(roleManager).Wait();
             DataInitializer.SeedUsers(userManager).Wait();

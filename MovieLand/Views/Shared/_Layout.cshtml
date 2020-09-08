@@ -56,6 +56,7 @@
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+        <script src="~/lib/microsoft-signalr/signalr.js"></script>
     </environment>
     <environment exclude="Development">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
@@ -70,9 +71,11 @@
                 crossorigin="anonymous"
                 integrity="sha384-xrRywqdh3PHs8keKZN+8zzc5TX0GRTLCcmivcbNJWm2rs5C8PRhcEn3czEjhAO9o">
         </script>
+        <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
     </environment>
     <partial name="_UrlsPartial" />
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/ratingHub.js" asp-append-version="true"></script>
     <script src="~/js/datatablesClient.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
